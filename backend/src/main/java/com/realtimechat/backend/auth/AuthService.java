@@ -44,7 +44,7 @@ public class AuthService {
     }
 
     public String LoginUser(LoginDTO request) {
-        User user = userRepository.findByUsernameOrEmail(request.getUsername())
+        User user = userRepository.findByUsernameOrEmail(request.getUsername(), request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
