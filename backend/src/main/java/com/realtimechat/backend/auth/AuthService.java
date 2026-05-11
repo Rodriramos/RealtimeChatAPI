@@ -3,6 +3,7 @@ package com.realtimechat.backend.auth;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.realtimechat.backend.dtos.LoginDTO;
 import com.realtimechat.backend.entities.RegisterRequest;
 import com.realtimechat.backend.entities.User;
 import com.realtimechat.backend.repositories.UserRepository;
@@ -21,7 +22,7 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
     }
 
-    public String Register(RegisterRequest request) {
+    public String RegisterUser(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username already exists");
         }
@@ -42,11 +43,11 @@ public class AuthService {
         return jwtUtil.generateToken(userRepository.save(user));
     }
 
-    public String Login(String username, String password) {
-        User user = userRepository.findByUsernameOrEmail(username)
+    public String LoginUser(LoginDTO request) {
+        User user = userRepository.findByUsernameOrEmail(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
 
