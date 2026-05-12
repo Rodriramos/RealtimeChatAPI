@@ -13,6 +13,7 @@ import com.realtimechat.backend.dtos.MessageResponseDTO;
 import com.realtimechat.backend.dtos.SendMessageDTO;
 import com.realtimechat.backend.entities.Message;
 import com.realtimechat.backend.entities.Room;
+import com.realtimechat.backend.exceptions.RoomNotFoundException;
 import com.realtimechat.backend.repositories.RoomRepository;
 import com.realtimechat.backend.services.MessageService;
 
@@ -29,7 +30,7 @@ public class ChatController {
     @SendTo("/topic/messages")
     public MessageResponseDTO handleGlobalMessage(SendMessageDTO messageRequest, Principal principal) {
         Room global = roomRepository.findByType(Room.RoomType.GLOBAL)
-                .orElseThrow(() -> new RuntimeException("Global room not found"));
+                .orElseThrow(() -> new RoomNotFoundException("Global room not found"));
         
         Message savedMessage = messageService.saveMessage(
             messageRequest.content(), 
@@ -49,7 +50,7 @@ public class ChatController {
     @ResponseBody
     public List<MessageResponseDTO> getHistory() {
         Room global = roomRepository.findByType(Room.RoomType.GLOBAL)
-                .orElseThrow(() -> new RuntimeException("Global room not found"));
+                .orElseThrow(() -> new RoomNotFoundException("Global room not found"));
 
         return messageService.getLastMessages(global.getId(), 50)
                 .stream()

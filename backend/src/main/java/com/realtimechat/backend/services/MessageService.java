@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import com.realtimechat.backend.entities.Message;
 import com.realtimechat.backend.entities.Room;
 import com.realtimechat.backend.entities.User;
+import com.realtimechat.backend.exceptions.RoomNotFoundException;
+import com.realtimechat.backend.exceptions.UserNotFoundException;
 import com.realtimechat.backend.repositories.MessageRepository;
 import com.realtimechat.backend.repositories.RoomRepository;
 import com.realtimechat.backend.repositories.UserRepository;
@@ -26,9 +28,9 @@ public class MessageService {
     @Transactional
     public Message saveMessage(String content, Long roomId, String username) {
         Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not found with id: " + roomId));
+                .orElseThrow(() -> new RoomNotFoundException("Room not found with id: " + roomId));
         User sender = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
 
         Message message = new Message();
         message.setContent(content);
@@ -38,7 +40,6 @@ public class MessageService {
     }
 
     public List<Message> getLastMessages(Long roomId, int limit) {
-        return messageRepository
-                .findTopNByRoomIdOrderByCreatedAtDesc(roomId, PageRequest.of(0, limit));
+        return messageRepository.findTopNByRoomIdOrderByCreatedAtDesc(roomId, PageRequest.of(0, limit));
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import com.realtimechat.backend.entities.User;
+import com.realtimechat.backend.exceptions.EmailNotFoundException;
 import com.realtimechat.backend.repositories.UserRepository;
 import com.realtimechat.backend.security.JwtUtil;
 
@@ -36,7 +37,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String email = oauthUser.getAttribute("email");
         
         if (email == null) {
-            throw new RuntimeException("Email not found from OAuth2 provider");
+            throw new EmailNotFoundException("Email not found from OAuth2 provider");
         }
 
         // Get the provider (e.g., Google, Facebook) from the authentication token
