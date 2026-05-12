@@ -1,4 +1,4 @@
-package com.realtimechat.backend.security;
+package com.realtimechat.backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +14,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.realtimechat.backend.auth.OAuth2SuccessHandler;
+import com.realtimechat.backend.security.JwtAuthFilter;
 
 @Configuration
 @EnableWebSecurity
