@@ -1,5 +1,5 @@
 package com.realtimechat.backend.dtos;
 
-public record SendMessageDTO(String content) {
-
-}
+public record SendMessageDTO(
+    String content) 
+{}
