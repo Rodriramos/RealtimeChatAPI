@@ -9,6 +9,12 @@ import com.realtimechat.backend.entities.User;
 import com.realtimechat.backend.repositories.UserRepository;
 import com.realtimechat.backend.security.JwtUtil;
 
+import com.realtimechat.backend.exceptions.EmailAlreadyExistsException;
+import com.realtimechat.backend.exceptions.PasswordMismatchException;
+import com.realtimechat.backend.exceptions.UserNotFoundException;
+import com.realtimechat.backend.exceptions.UsernameAlreadyExistsException;
+import com.realtimechat.backend.exceptions.InvalidPasswordException;
+
 @Service
 public class AuthService {
 
@@ -24,13 +30,13 @@ public class AuthService {
 
     public String RegisterUser(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new UsernameAlreadyExistsException("Username already exists");
         }
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new EmailAlreadyExistsException("Email already exists");
         }
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new RuntimeException("Passwords do not match");
+            throw new PasswordMismatchException("Passwords do not match");
         }
 
         User user = User.builder()
@@ -45,10 +51,10 @@ public class AuthService {
 
     public String LoginUser(LoginDTO request) {
         User user = userRepository.findByUsernameOrEmail(request.getUsername(), request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(request.getUsername()));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new InvalidPasswordException("Invalid password");
         }
 
         return jwtUtil.generateToken(user);
