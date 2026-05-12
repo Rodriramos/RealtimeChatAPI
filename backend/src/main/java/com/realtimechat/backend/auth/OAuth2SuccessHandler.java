@@ -1,7 +1,6 @@
 package com.realtimechat.backend.auth;
 
 import java.io.IOException;
-import java.net.http.HttpClient;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
