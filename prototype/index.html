@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RealtimeChat — Dev Client</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #080c0e;
+            --bg2: #0d1214;
+            --bg3: #111618;
+            --border: #1c2428;
+            --border2: #243038;
+            --text: #c8d8e0;
+            --text2: #6a8a98;
+            --text3: #334450;
+            --accent: #00d4aa;
+            --accent2: #007a60;
+            --warn: #f0a050;
+            --err: #e05060;
+            --purple: #c080e0;
+            --mono: 'IBM Plex Mono', monospace;
+            --sans: 'IBM Plex Sans', sans-serif;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            font-family: var(--mono);
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 240px;
+            min-width: 240px;
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text3);
+            transition: background 0.3s, box-shadow 0.3s;
+            flex-shrink: 0;
+        }
+
+        .status-dot.on {
+            background: var(--accent);
+            box-shadow: 0 0 6px var(--accent);
+        }
+
+        .status-dot.err {
+            background: var(--err);
+            box-shadow: 0 0 6px var(--err);
+        }
+
+        .app-title {
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text2);
+            font-weight: 500;
+        }
+
+        .sidebar-section {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-label {
+            font-size: 9px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text3);
+            padding: 0 16px 6px;
+            font-weight: 500;
+        }
+
+        .room-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 16px;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--text2);
+            transition: background 0.1s, color 0.1s;
+            border-left: 2px solid transparent;
+        }
+
+        .room-item:hover {
+            background: var(--bg3);
+            color: var(--text);
+        }
+
+        .room-item.active {
+            background: var(--bg3);
+            color: var(--accent);
+            border-left-color: var(--accent);
+        }
+
+        .room-icon {
+            font-size: 10px;
+            opacity: 0.6;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* ── NOTIFICATION BADGE ── */
+        .notif-badge {
+            display: none;
+            background: var(--purple);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 500;
+            padding: 1px 6px;
+            border-radius: 10px;
+            margin-left: auto;
+        }
+
+        .notif-badge.visible {
+            display: inline-block;
+        }
+
+        /* ── NOTIFICATION TOAST ── */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 999;
+        }
+
+        .toast {
+            background: #1a0e20;
+            border: 1px solid #5a2a80;
+            border-radius: 6px;
+            padding: 12px 16px;
+            max-width: 300px;
+            animation: slideIn 0.25s ease;
+            cursor: pointer;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .toast-title {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--purple);
+            margin-bottom: 4px;
+        }
+
+        .toast-body {
+            font-size: 12px;
+            color: var(--text);
+            font-family: var(--sans);
+            font-weight: 300;
+        }
+
+        .toast-hint {
+            font-size: 10px;
+            color: var(--text3);
+            margin-top: 4px;
+        }
+
+        /* ── PENDING INVITATIONS PANEL ── */
+        .inv-list {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .inv-card {
+            background: #0e0814;
+            border: 1px solid #2a1540;
+            border-radius: 4px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: fadeUp 0.2s ease;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .inv-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .inv-name {
+            font-size: 13px;
+            color: var(--text);
+            font-family: var(--sans);
+        }
+
+        .inv-meta {
+            font-size: 10px;
+            color: var(--text3);
+        }
+
+        /* ── MAIN ── */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg2);
+            flex-shrink: 0;
+        }
+
+        .topbar input {
+            flex: 1;
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 11px;
+            padding: 7px 12px;
+            border-radius: 3px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .topbar input:focus {
+            border-color: var(--accent2);
+        }
+
+        .topbar input::placeholder {
+            color: var(--text3);
+        }
+
+        .btn {
+            font-family: var(--mono);
+            font-size: 11px;
+            padding: 7px 14px;
+            border-radius: 3px;
+            cursor: pointer;
+            border: 1px solid var(--border2);
+            background: var(--bg3);
+            color: var(--text2);
+            white-space: nowrap;
+            transition: all 0.15s;
+            letter-spacing: 0.05em;
+        }
+
+        .btn:hover {
+            background: #1a2530;
+            color: var(--text);
+            border-color: #3a5060;
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: #012820;
+            border-color: var(--accent2);
+            color: var(--accent);
+        }
+
+        .btn.primary:hover {
+            background: #013d30;
+            border-color: var(--accent);
+        }
+
+        .btn.danger {
+            background: #200810;
+            border-color: #5a2030;
+            color: var(--err);
+        }
+
+        .btn.danger:hover {
+            background: #300c18;
+            border-color: var(--err);
+        }
+
+        .btn.purple {
+            background: #1a0e20;
+            border-color: #5a2a80;
+            color: var(--purple);
+        }
+
+        .btn.purple:hover {
+            background: #240e30;
+            border-color: var(--purple);
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg2);
+            flex-shrink: 0;
+        }
+
+        .tab {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 9px 18px;
+            cursor: pointer;
+            color: var(--text3);
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s, border-color 0.15s;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab:hover {
+            color: var(--text2);
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .panel {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel.active {
+            display: flex;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: var(--bg);
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 2px;
+        }
+
+        .msg {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            animation: fadeUp 0.2s ease;
+        }
+
+        .msg .meta {
+            font-size: 10px;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .msg .meta .who {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .msg .meta .when {
+            color: var(--text3);
+        }
+
+        .msg .bubble {
+            font-size: 12.5px;
+            color: var(--text);
+            line-height: 1.55;
+            padding: 6px 10px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 0 4px 4px 4px;
+            display: inline-block;
+            max-width: 85%;
+            font-family: var(--sans);
+            font-weight: 300;
+        }
+
+        .msg.history .meta .who {
+            color: var(--accent2);
+        }
+
+        .msg.history .bubble {
+            background: var(--bg2);
+            border-color: var(--border);
+            color: var(--text2);
+        }
+
+        .divider {
+            text-align: center;
+            font-size: 9px;
+            color: var(--text3);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .log-line {
+            font-size: 11px;
+            color: var(--text3);
+            padding: 2px 0;
+        }
+
+        .log-line.ok {
+            color: var(--accent2);
+        }
+
+        .log-line.err {
+            color: var(--err);
+        }
+
+        .sendbar {
+            display: flex;
+            gap: 8px;
+            padding: 10px 16px;
+            border-top: 1px solid var(--border);
+            background: var(--bg2);
+            flex-shrink: 0;
+        }
+
+        .sendbar input {
+            flex: 1;
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-family: var(--sans);
+            font-size: 13px;
+            font-weight: 300;
+            padding: 8px 12px;
+            border-radius: 3px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .sendbar input:focus {
+            border-color: var(--accent2);
+        }
+
+        .sendbar input::placeholder {
+            color: var(--text3);
+        }
+
+        .create-form {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-width: 480px;
+        }
+
+        .field-label {
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text2);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .field-input {
+            width: 100%;
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 12px;
+            padding: 8px 12px;
+            border-radius: 3px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .field-input:focus {
+            border-color: var(--accent2);
+        }
+
+        .field-input::placeholder {
+            color: var(--text3);
+        }
+
+        textarea.field-input {
+            resize: vertical;
+            min-height: 70px;
+            line-height: 1.5;
+        }
+
+        .result-box {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 10px 12px;
+            font-size: 11px;
+            color: var(--text2);
+            min-height: 40px;
+            white-space: pre-wrap;
+        }
+
+        .rooms-list {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .room-card {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: border-color 0.15s;
+        }
+
+        .room-card:hover {
+            border-color: var(--border2);
+        }
+
+        .room-card-name {
+            font-size: 13px;
+            color: var(--text);
+            font-family: var(--sans);
+        }
+
+        .room-card-meta {
+            font-size: 10px;
+            color: var(--text3);
+            margin-top: 2px;
+        }
+
+        .badge {
+            font-size: 9px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 2px 7px;
+            border-radius: 2px;
+            font-weight: 500;
+        }
+
+        .badge.thematic {
+            background: #0a1e28;
+            color: #4ab8d0;
+            border: 1px solid #1a3a48;
+        }
+
+        .badge.private {
+            background: #1a0e20;
+            color: var(--purple);
+            border: 1px solid #3a1a50;
+        }
+
+        .badge.global {
+            background: #012018;
+            color: var(--accent);
+            border: 1px solid var(--accent2);
+        }
+
+        .no-room {
+            padding: 20px;
+            font-size: 12px;
+            color: var(--text3);
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="status-dot" id="statusDot"></div>
+            <span class="app-title">RealtimeChat</span>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="section-label">Global</div>
+            <div class="room-item active" id="nav-global" onclick="switchRoom(1, 'Global Room', this)">
+                <span class="room-icon">#</span> Global Room
+            </div>
+        </div>
+
+        <div class="sidebar-section" style="flex:1;overflow-y:auto;">
+            <div class="section-label">Temáticas</div>
+            <div id="thematic-list">
+                <div style="padding:6px 16px;font-size:11px;color:var(--text3)">conecta primero</div>
+            </div>
+        </div>
+
+        <div class="sidebar-section" style="overflow-y:auto;max-height:180px;">
+            <div class="section-label">Privadas</div>
+            <div id="private-list">
+                <div style="padding:6px 16px;font-size:11px;color:var(--text3)">conecta primero</div>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <div style="font-size:10px;color:var(--text3);">conectado como</div>
+            <div id="current-user" style="font-size:12px;color:var(--accent);">—</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:4px;">sala activa</div>
+            <div id="active-room-label" style="font-size:12px;color:var(--text2);">—</div>
+        </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <div class="topbar">
+            <input type="text" id="tokenInput" placeholder="Pega el JWT de Postman aquí..." />
+            <button class="btn primary" id="connectBtn" onclick="connect()">Conectar</button>
+            <button class="btn danger" id="disconnectBtn" onclick="disconnect()" disabled>Desconectar</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" id="tab-chat" onclick="showTab('chat',   this)">Chat</button>
+            <button class="tab" id="tab-rooms" onclick="showTab('rooms',  this)">Salas</button>
+            <button class="tab" id="tab-inv" onclick="showTab('inv',    this)">
+                Invitaciones <span class="notif-badge" id="invBadge">0</span>
+            </button>
+            <button class="tab" id="tab-create" onclick="showTab('create', this)">+ Sala Privada</button>
+        </div>
+
+        <!-- CHAT -->
+        <div class="panel active" id="panel-chat">
+            <div class="messages" id="messagesBox">
+                <div class="log-line">// conecta para empezar</div>
+            </div>
+            <div class="sendbar">
+                <input type="text" id="msgInput" placeholder="Escribe un mensaje... (Enter para enviar)" disabled
+                    onkeydown="if(event.key==='Enter') sendMessage()" />
+                <button class="btn primary" id="sendBtn" onclick="sendMessage()" disabled>Enviar</button>
+            </div>
+        </div>
+
+        <!-- SALAS -->
+        <div class="panel" id="panel-rooms">
+            <div
+                style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;">
+                <span style="font-size:11px;color:var(--text2);">Todas las salas disponibles</span>
+                <button class="btn" style="margin-left:auto;font-size:10px;" onclick="loadRooms()">↻ Actualizar</button>
+            </div>
+            <div class="rooms-list" id="roomsList">
+                <div class="no-room">conecta primero</div>
+            </div>
+        </div>
+
+        <!-- INVITACIONES -->
+        <div class="panel" id="panel-inv">
+            <div
+                style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;">
+                <span style="font-size:11px;color:var(--text2);">Invitaciones pendientes</span>
+                <button class="btn purple" style="margin-left:auto;font-size:10px;" onclick="markAllSeen()">✓ Marcar
+                    todas como vistas</button>
+            </div>
+            <div class="inv-list" id="invList">
+                <div class="no-room">conecta primero</div>
+            </div>
+        </div>
+
+        <!-- CREAR SALA PRIVADA -->
+        <div class="panel" id="panel-create">
+            <div class="create-form">
+                <div>
+                    <span class="field-label">Nombre de la sala</span>
+                    <input type="text" class="field-input" id="newRoomName" placeholder="ej: Proyecto Alpha" />
+                </div>
+                <div>
+                    <span class="field-label">Emails de los invitados (uno por línea)</span>
+                    <textarea class="field-input" id="newRoomEmails"
+                        placeholder="ana@email.com&#10;carlos@email.com"></textarea>
+                </div>
+                <button class="btn primary" onclick="createPrivateRoom()" style="width:fit-content;">Crear sala
+                    privada</button>
+                <div>
+                    <span class="field-label">Resultado</span>
+                    <div class="result-box" id="createResult">—</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let stompClient = null;
+        let currentToken = '';
+        let currentUser = null; // { id, username, email }
+        let activeRoomId = 1;
+        let subscriptions = {};
+        let pendingInvitations = [];
+
+        // ── UTILS ──────────────────────────────────────────────────────────────
+        function fmt(iso) {
+            if (!iso) return '';
+            return new Date(iso).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        }
+        function esc(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+        function authHeaders() {
+            return { 'Authorization': 'Bearer ' + currentToken, 'Content-Type': 'application/json' };
+        }
+        function log(text, type = '') {
+            const box = document.getElementById('messagesBox');
+            const el = document.createElement('div');
+            el.className = 'log-line ' + type;
+            el.textContent = text;
+            box.appendChild(el);
+            box.scrollTop = box.scrollHeight;
+        }
+        function addMsg(username, content, time, isHistory) {
+            const box = document.getElementById('messagesBox');
+            const el = document.createElement('div');
+            el.className = 'msg' + (isHistory ? ' history' : '');
+            el.innerHTML = `
+      <div class="meta"><span class="who">${esc(username)}</span><span class="when">${esc(time)}</span></div>
+      <div class="bubble">${esc(content)}</div>`;
+            box.appendChild(el);
+            box.scrollTop = box.scrollHeight;
+        }
+        function addDivider(text) {
+            const box = document.getElementById('messagesBox');
+            const el = document.createElement('div');
+            el.className = 'divider';
+            el.textContent = text;
+            box.appendChild(el);
+        }
+
+        // ── TABS ───────────────────────────────────────────────────────────────
+        function showTab(name, btn) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+            btn.classList.add('active');
+            if (name === 'rooms' && stompClient) loadRooms();
+            if (name === 'inv' && stompClient) loadPendingInvitations();
+        }
+
+        // ── TOAST ──────────────────────────────────────────────────────────────
+        function showToast(title, body, onClick) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `
+      <div class="toast-title">${esc(title)}</div>
+      <div class="toast-body">${esc(body)}</div>
+      <div class="toast-hint">click para entrar a la sala</div>`;
+            toast.onclick = () => { onClick(); container.removeChild(toast); };
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) container.removeChild(toast); }, 6000);
+        }
+
+        // ── CONNECT ────────────────────────────────────────────────────────────
+        function connect() {
+            const raw = document.getElementById('tokenInput').value.trim();
+            if (!raw) { alert('Pega el JWT primero'); return; }
+            currentToken = raw.startsWith('Bearer ') ? raw.slice(7) : raw;
+
+            document.getElementById('messagesBox').innerHTML = '';
+            log('// conectando...');
+
+            const socket = new SockJS('http://localhost:8080/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.debug = null;
+
+            stompClient.connect(
+                { Authorization: 'Bearer ' + currentToken },
+                function () {
+                    log('// conectado ✓', 'ok');
+                    setConnected(true);
+
+                    // 1. Obtener usuario actual
+                    fetch('http://localhost:8080/api/users/me', { headers: authHeaders() })
+                        .then(r => r.json())
+                        .then(user => {
+                            currentUser = user;
+                            document.getElementById('current-user').textContent = user.username;
+
+                            // 2. Suscribirse al topic personal para notificaciones
+                            stompClient.subscribe('/topic/user.' + user.id, function (msg) {
+                                const inv = JSON.parse(msg.body);
+                                // inv tiene { roomId, roomName, invitedBy } — viene de InvitationNotification
+                                pendingInvitations.push({ id: inv.roomId, name: inv.roomName, type: 'PRIVATE' });
+                                updateInvBadge(pendingInvitations.length);
+                                const safeRoomName = esc(inv.roomName);
+                                const safeInvitedBy = esc(inv.invitedBy);
+                                showToast(
+                                    '🔒 Nueva invitación',
+                                    safeInvitedBy + ' te invitó a "' + safeRoomName + '"',
+                                    () => switchRoom(inv.roomId, inv.roomName, null)
+                                );
+                                // Refrescar sidebar para que aparezca la sala privada
+                                loadSidebar();
+                            });
+
+                            // 3. Cargar invitaciones pendientes
+                            loadPendingInvitations();
+                        });
+
+                    // 4. Cargar sidebar y entrar al global
+                    loadSidebar();
+                    joinRoom(1, 'Global Room');
+                },
+                function (err) {
+                    log('// error: ' + err, 'err');
+                    document.getElementById('statusDot').className = 'status-dot err';
+                    setConnected(false);
+                }
+            );
+        }
+
+        function disconnect() {
+            if (stompClient) stompClient.disconnect();
+            stompClient = null; currentUser = null; subscriptions = {}; pendingInvitations = [];
+            setConnected(false);
+            document.getElementById('thematic-list').innerHTML = '<div style="padding:6px 16px;font-size:11px;color:var(--text3)">conecta primero</div>';
+            document.getElementById('private-list').innerHTML = '<div style="padding:6px 16px;font-size:11px;color:var(--text3)">conecta primero</div>';
+            document.getElementById('messagesBox').innerHTML = '';
+            document.getElementById('current-user').textContent = '—';
+            document.getElementById('active-room-label').textContent = '—';
+            updateInvBadge(0);
+            log('// desconectado');
+        }
+
+        function setConnected(on) {
+            document.getElementById('statusDot').className = 'status-dot' + (on ? ' on' : '');
+            document.getElementById('connectBtn').disabled = on;
+            document.getElementById('disconnectBtn').disabled = !on;
+            document.getElementById('msgInput').disabled = !on;
+            document.getElementById('sendBtn').disabled = !on;
+        }
+
+        // ── INVITATIONS ────────────────────────────────────────────────────────
+        function loadPendingInvitations() {
+            fetch('http://localhost:8080/api/rooms/invitations/pending', { headers: authHeaders() })
+                .then(r => r.json())
+                .then(rooms => {
+                    // El endpoint devuelve RoomResponseDTO: { id, name, type }
+                    pendingInvitations = rooms;
+                    updateInvBadge(rooms.length);
+                    renderInvList(rooms);
+                });
+        }
+
+        function updateInvBadge(count) {
+            const badge = document.getElementById('invBadge');
+            badge.textContent = count;
+            badge.classList.toggle('visible', count > 0);
+        }
+
+        function renderInvList(rooms) {
+            const list = document.getElementById('invList');
+            list.innerHTML = '';
+            if (!rooms.length) {
+                list.innerHTML = '<div class="no-room">sin invitaciones pendientes</div>';
+                return;
+            }
+            rooms.forEach(r => {
+                // r tiene { id, name, type } — viene de RoomResponseDTO
+                const el = document.createElement('div');
+                el.className = 'inv-card';
+                const safeName = esc(r.name);
+                el.innerHTML = `
+        <div class="inv-info">
+          <div class="inv-name">🔒 ${safeName}</div>
+          <div class="inv-meta">id: ${r.id}</div>
+        </div>
+        <button class="btn purple" style="font-size:10px;padding:5px 12px;"
+          onclick="acceptInvitation(${r.id}, '${safeName}')">Entrar</button>`;
+                list.appendChild(el);
+            });
+        }
+
+        function acceptInvitation(roomId, roomName) {
+            markAllSeen();
+            switchRoom(roomId, roomName, null);
+        }
+
+        function markAllSeen() {
+            fetch('http://localhost:8080/api/rooms/invitations/seen', {
+                method: 'POST', headers: authHeaders()
+            }).then(() => {
+                pendingInvitations = [];
+                updateInvBadge(0);
+                document.getElementById('invList').innerHTML = '<div class="no-room">sin invitaciones pendientes</div>';
+            });
+        }
+
+        // ── SIDEBAR ────────────────────────────────────────────────────────────
+        function loadSidebar() {
+            fetch('http://localhost:8080/api/rooms/thematic', { headers: authHeaders() })
+                .then(r => r.json())
+                .then(rooms => {
+                    const el = document.getElementById('thematic-list');
+                    el.innerHTML = '';
+                    if (!rooms.length) { el.innerHTML = '<div style="padding:6px 16px;font-size:11px;color:var(--text3)">sin salas temáticas</div>'; return; }
+                    rooms.forEach(r => {
+                        const item = document.createElement('div');
+                        item.className = 'room-item';
+                        item.innerHTML = `<span class="room-icon">#</span> ${esc(r.name)}`;
+                        item.onclick = () => switchRoom(r.id, r.name, item);
+                        el.appendChild(item);
+                    });
+                });
+
+            fetch('http://localhost:8080/api/rooms/private/mine', { headers: authHeaders() })
+                .then(r => r.json())
+                .then(rooms => {
+                    const el = document.getElementById('private-list');
+                    el.innerHTML = '';
+                    if (!rooms.length) { el.innerHTML = '<div style="padding:6px 16px;font-size:11px;color:var(--text3)">sin salas privadas</div>'; return; }
+                    rooms.forEach(r => {
+                        const item = document.createElement('div');
+                        item.className = 'room-item';
+                        item.innerHTML = `<span class="room-icon">🔒</span> ${esc(r.name)}`;
+                        item.onclick = () => switchRoom(r.id, r.name, item);
+                        el.appendChild(item);
+                    });
+                });
+        }
+
+        // ── SWITCH ROOM ────────────────────────────────────────────────────────
+        function switchRoom(roomId, roomName, itemEl) {
+            activeRoomId = roomId;
+            document.getElementById('active-room-label').textContent = roomName;
+            document.getElementById('messagesBox').innerHTML = '';
+            document.querySelectorAll('.room-item').forEach(i => i.classList.remove('active'));
+            if (itemEl) itemEl.classList.add('active');
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('panel-chat').classList.add('active');
+            document.getElementById('tab-chat').classList.add('active');
+            if (stompClient) joinRoom(roomId, roomName);
+        }
+
+        function joinRoom(roomId, roomName) {
+            document.getElementById('active-room-label').textContent = roomName;
+            if (!subscriptions[roomId]) {
+                subscriptions[roomId] = stompClient.subscribe('/topic/chat.room.' + roomId, function (msg) {
+                    // Leer activeRoomId en el momento de recibir, no en el de suscribirse
+                    if (roomId !== activeRoomId) return;
+                    const body = JSON.parse(msg.body);
+                    // Solo añadir si el box no tiene ya ese mensaje (evita duplicados al recargar)
+                    addMsg(body.senderUsername, body.content, fmt(body.sentAt || body.createdAt), false);
+                });
+            }
+            // Re-suscribirse si la conexión se cayó y el subscription quedó muerto
+            else if (subscriptions[roomId].id === undefined) {
+                delete subscriptions[roomId];
+                joinRoom(roomId, roomName);
+                return;
+            }
+            fetch('http://localhost:8080/api/chat/room/' + roomId + '/history', { headers: authHeaders() })
+                .then(r => { if (r.status === 403) throw new Error('403 — sin acceso'); return r.json(); })
+                .then(messages => {
+                    if (!messages.length) { log('// sin historial previo'); return; }
+                    addDivider('historial');
+                    messages.reverse().forEach(m => addMsg(m.senderUsername, m.content, fmt(m.sentAt || m.createdAt), true));
+                    addDivider('en vivo');
+                })
+                .catch(err => log('// ' + err.message, 'err'));
+        }
+
+        // ── SEND ───────────────────────────────────────────────────────────────
+        function sendMessage() {
+            const input = document.getElementById('msgInput');
+            const content = input.value.trim();
+            if (!content || !stompClient) return;
+            stompClient.send('/app/chat.room.' + activeRoomId, {}, JSON.stringify({ content }));
+            input.value = '';
+        }
+
+        // ── ROOMS PANEL ────────────────────────────────────────────────────────
+        function loadRooms() {
+            const list = document.getElementById('roomsList');
+            list.innerHTML = '<div class="no-room">cargando...</div>';
+            Promise.all([
+                fetch('http://localhost:8080/api/rooms/thematic', { headers: authHeaders() }).then(r => r.json()),
+                fetch('http://localhost:8080/api/rooms/private/mine', { headers: authHeaders() }).then(r => r.json()),
+            ]).then(([thematic, priv]) => {
+                list.innerHTML = '';
+                list.appendChild(buildRoomCard({ id: 1, name: 'Global Room', type: 'GLOBAL' }));
+                thematic.forEach(r => list.appendChild(buildRoomCard(r)));
+                priv.forEach(r => list.appendChild(buildRoomCard(r)));
+            }).catch(() => {
+                list.innerHTML = '<div class="no-room" style="color:var(--err)">error al cargar salas</div>';
+            });
+        }
+
+        function buildRoomCard(room) {
+            const labels = { GLOBAL: 'global', THEMATIC: 'temática', PRIVATE: 'privada' };
+            const badge = { GLOBAL: 'global', THEMATIC: 'thematic', PRIVATE: 'private' };
+            const el = document.createElement('div');
+            el.className = 'room-card';
+            el.innerHTML = `
+      <div>
+        <div class="room-card-name">${esc(room.name)}</div>
+        <div class="room-card-meta">id: ${room.id}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="badge ${badge[room.type] || ''}">${labels[room.type] || room.type}</span>
+        <button class="btn" style="font-size:10px;padding:4px 10px;"
+          onclick="switchRoom(${room.id}, '${esc(room.name)}', null)">Entrar</button>
+      </div>`;
+            return el;
+        }
+
+        // ── CREATE PRIVATE ─────────────────────────────────────────────────────
+        function createPrivateRoom() {
+            const name = document.getElementById('newRoomName').value.trim();
+            const emails = document.getElementById('newRoomEmails').value.split('\n').map(e => e.trim()).filter(Boolean);
+            if (!name) { document.getElementById('createResult').textContent = '⚠ Escribe un nombre'; return; }
+            if (!stompClient) { document.getElementById('createResult').textContent = '⚠ Conecta primero'; return; }
+            document.getElementById('createResult').textContent = 'creando...';
+            fetch('http://localhost:8080/api/rooms/private', {
+                method: 'POST', headers: authHeaders(),
+                body: JSON.stringify({ name, invitedEmails: emails })
+            })
+                .then(r => r.json())
+                .then(room => {
+                    document.getElementById('createResult').textContent = `✓ Sala creada\nid: ${room.id}\nnombre: ${room.name}`;
+                    document.getElementById('newRoomName').value = '';
+                    document.getElementById('newRoomEmails').value = '';
+                    loadSidebar();
+                })
+                .catch(err => { document.getElementById('createResult').textContent = '✗ Error: ' + err.message; });
+        }
+    </script>
+</body>
+
+</html>

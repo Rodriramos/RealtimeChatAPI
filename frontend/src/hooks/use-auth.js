@@ -1,0 +1,1 @@
+// Reusable logic related to authentication (checking if user is logged in, getting user info, etc)
