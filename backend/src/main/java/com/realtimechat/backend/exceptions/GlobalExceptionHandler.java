@@ -81,4 +81,14 @@ public class GlobalExceptionHandler {
             LocalDateTime.now()
         ));
     }
+
+    @ExceptionHandler(AccessDeniedExcpetion.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedExcpetion ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(
+            HttpStatus.FORBIDDEN.value(),
+            ex.getMessage(),
+            request.getRequestURI(),
+            LocalDateTime.now()
+        ));
+    }
 }
