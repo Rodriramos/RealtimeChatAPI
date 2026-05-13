@@ -40,6 +40,8 @@ public class MessageService {
     }
 
     public List<Message> getLastMessages(Long roomId, int limit) {
-        return messageRepository.findTopNByRoomIdOrderByCreatedAtDesc(roomId, PageRequest.of(0, limit));
+        return messageRepository.findByRoomIdOrderByCreatedAtDesc(
+                roomId,
+                PageRequest.of(0, limit));
     }
 }
