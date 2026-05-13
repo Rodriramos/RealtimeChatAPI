@@ -1,1 +1,6 @@
-// Reusable logic related to authentication (checking if user is logged in, getting user info, etc)
+import { useContext } from 'react';
+import AuthContext from '../contexts/AuthContext';
+
+export default function useAuth() {
+  return useContext(AuthContext);
+}
