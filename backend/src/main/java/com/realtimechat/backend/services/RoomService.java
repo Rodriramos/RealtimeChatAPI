@@ -2,8 +2,11 @@ package com.realtimechat.backend.services;
 
 import java.util.List;
 
+import java.util.Optional;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.realtimechat.backend.dtos.InvitationNotificationDTO;
 import com.realtimechat.backend.entities.Room;
 import com.realtimechat.backend.entities.RoomMember;
 import com.realtimechat.backend.entities.User;
@@ -23,6 +26,7 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final RoomMemberRepository roomMemberRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public Room createPrivateRoom(String roomName, String ownerUsername, List<String> invitedEmails) {
@@ -38,10 +42,20 @@ public class RoomService {
         addMember(room, owner, RoomMember.Role.OWNER);
 
         invitedEmails.forEach(email -> {
-            userRepository.findByEmail(email).ifPresent(user -> addMember(room, user, RoomMember.Role.MEMBER));
+            Optional<User> invitedUserOpt = userRepository.findByEmail(email);
+            invitedUserOpt.ifPresent(invitedUser -> {
+                addMember(room, invitedUser, RoomMember.Role.MEMBER);
+                notifyInvitation(invitedUser, room);
+            });
         });
         
         return room;
+    }
+
+    private void notifyInvitation(User user, Room room) {
+        messagingTemplate.convertAndSend(
+            "/topic/user." + user.getId(), 
+            new InvitationNotificationDTO(room.getId(), room.getName(), room.getCreatedBy().getUsername()));
     }
 
     public List<Room> getThematicRooms() {

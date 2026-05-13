@@ -3,7 +3,6 @@ package com.realtimechat.backend.entities;
 import java.time.Instant;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.data.annotation.CreatedBy;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -47,6 +46,9 @@ public class RoomMember {
     @CreationTimestamp
     @Column(name = "joined_at", nullable = false, updatable = false)
     private Instant joinedAt;
+
+    @Column(name = "seen_at", nullable = false)
+    private Instant seenAt;
 
     public enum Role {
         OWNER,
