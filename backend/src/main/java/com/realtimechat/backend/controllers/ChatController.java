@@ -1,21 +1,24 @@
 package com.realtimechat.backend.controllers;
 
+import com.realtimechat.backend.auth.AuthController;
 import java.security.Principal;
 import java.util.List;
 
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.realtimechat.backend.dtos.MessageResponseDTO;
 import com.realtimechat.backend.dtos.SendMessageDTO;
 import com.realtimechat.backend.entities.Message;
-import com.realtimechat.backend.entities.Room;
-import com.realtimechat.backend.exceptions.RoomNotFoundException;
-import com.realtimechat.backend.repositories.RoomRepository;
+import com.realtimechat.backend.exceptions.AccessDeniedExcpetion;
 import com.realtimechat.backend.services.MessageService;
+import com.realtimechat.backend.services.RoomService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,43 +27,43 @@ import lombok.RequiredArgsConstructor;
 public class ChatController {
 
     private final MessageService messageService;
-    private final RoomRepository roomRepository;
+    private final RoomService roomService;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    @MessageMapping("/chat.global")
-    @SendTo("/topic/messages")
-    public MessageResponseDTO handleGlobalMessage(SendMessageDTO messageRequest, Principal principal) {
-        Room global = roomRepository.findByType(Room.RoomType.GLOBAL)
-                .orElseThrow(() -> new RoomNotFoundException("Global room not found"));
-        
+    @MessageMapping("/chat.room.{roomId}")
+    public void handleRoomMessage(@DestinationVariable Long roomId, SendMessageDTO messageRequest, Principal principal) {
+        if (!roomService.hasAccessToRoom(roomId, principal.getName())) {
+            throw new AccessDeniedExcpetion("Room not found or access denied for room ID: " + roomId);
+        }
+
         Message savedMessage = messageService.saveMessage(
             messageRequest.content(), 
-            global.getId(), 
+            roomId, 
             principal.getName());
 
-        return new MessageResponseDTO(
-            savedMessage.getId(),
-            savedMessage.getContent(),
-            savedMessage.getCreatedAt(),
-            savedMessage.getUser().getUsername(),
-            savedMessage.getUser().getId()
-        );
+        messagingTemplate.convertAndSend("/topic/chat.room" + roomId, toResponse(savedMessage));
     }
 
-    @GetMapping("/api/chat/global/history")
+    @GetMapping("/api/chat/room/{roomId}/history")
     @ResponseBody
-    public List<MessageResponseDTO> getHistory() {
-        Room global = roomRepository.findByType(Room.RoomType.GLOBAL)
-                .orElseThrow(() -> new RoomNotFoundException("Global room not found"));
+    public List<MessageResponseDTO> getHistory(@PathVariable Long roomId, Principal principal) {
+        if (!roomService.hasAccessToRoom(roomId, principal.getName())) {
+            throw new AccessDeniedExcpetion("Room not found or access denied for room ID: " + roomId);
+        }
 
-        return messageService.getLastMessages(global.getId(), 50)
+        return messageService.getLastMessages(roomId, 50)
                 .stream()
-                .map(message -> new MessageResponseDTO(
-                    message.getId(),
-                    message.getContent(),
-                    message.getCreatedAt(),
-                    message.getUser().getUsername(),
-                    message.getUser().getId()
-                ))
+                .map(this::toResponse)
                 .toList();
+    }
+
+    private MessageResponseDTO toResponse(Message message) {
+        return new MessageResponseDTO(
+            message.getId(),
+            message.getContent(),
+            message.getCreatedAt(),
+            message.getUser().getUsername(),
+            message.getUser().getId()
+        );
     }
 }
