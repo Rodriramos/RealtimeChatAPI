@@ -1,0 +1,1 @@
+// Globla state. User authentication status, user info, etc. This will be used across the app to determine if the user is logged in, who they are, etc.

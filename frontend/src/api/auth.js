@@ -1,0 +1,1 @@
+// Http calls related to authentication (login, register, logout)
