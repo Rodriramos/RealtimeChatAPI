@@ -1,1 +1,5 @@
 @import 'tailwindcss';
+
+* {
+  font-family: 'Syne Mono', 'IBM Plex Mono' , monospace;
+}
