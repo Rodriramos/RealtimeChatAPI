@@ -1,33 +1,18 @@
-import { Link, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/login-page.jsx';
+import ChatPage from './pages/chat-page.jsx';
+import OAuth2RedirectPage from './pages/oauth2-redirect-page.jsx';
 
 function App() {
   return (
-    <div className="p-10">
-      <h1 className="text-3xl font-bold mb-5">
-        React Router Demo
-      </h1>
-
-      <nav className="flex gap-5 mb-5">
-        <Link
-          to="/login"
-          className="text-blue-500"
-        >
-          Login
-        </Link>
-
-        <Link
-          to="/chat"
-          className="text-blue-500"
-        >
-          Chat
-        </Link>
-      </nav>
-
-      <hr className="mb-5" />
-
-      {/* Aquí se renderizan las rutas hijas */}
-      <Outlet />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/chat"  element={<ChatPage />} />
+        <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

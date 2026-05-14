@@ -1,0 +1,1 @@
+// Hook for managing rooms in the application
