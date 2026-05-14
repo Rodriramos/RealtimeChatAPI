@@ -59,6 +59,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String token = jwtUtil.generateToken(user);
 
         // Redirect to the frontend with the JWT token as a query parameter
-        getRedirectStrategy().sendRedirect(request, response, "http://localhost:3000/oauth2/redirect?token=" + token);
+        getRedirectStrategy().sendRedirect(request, response, "http://localhost:5173/oauth2/redirect?token=" + token);
     }
 }
