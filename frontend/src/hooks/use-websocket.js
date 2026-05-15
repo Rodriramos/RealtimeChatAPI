@@ -48,18 +48,22 @@ export function useWebSocket() {
     };
   }, [token]);
 
-  // Subscribe to a topic - Evit duplicate subscriptions
   const subscribe = useCallback((topic, callback) => {
-    if (!connected || !clientRef.current) return;
-    if (subscriptionsRef.current[topic]) return;
+  console.log("subscribe llamado:", topic);
+  console.log("cliente conectado:", clientRef.current?.connected);
+  console.log("ya suscrito:", !!subscriptionsRef.current[topic]);
+  
+  if (!clientRef.current?.connected) return;
+  if (subscriptionsRef.current[topic]) return;
 
-    const subscription = clientRef.current.subscribe(topic, (message) => {
-      callback(JSON.parse(message.body));
-    });
+  const subscription = clientRef.current.subscribe(topic, (message) => {
+    console.log("mensaje recibido en topic:", topic, message.body);
+    callback(JSON.parse(message.body));
+  });
 
-    subscriptionsRef.current[topic] = subscription;
-    return subscription;
-  }, []);
+  subscriptionsRef.current[topic] = subscription;
+  return subscription;
+}, []);
 
   // Unsubscribe from a topic
   const unsubscribe = useCallback((topic) => {
