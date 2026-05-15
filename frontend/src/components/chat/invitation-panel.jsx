@@ -11,7 +11,7 @@ export default function InvitationPanel({ invitations, onAccept, onMarkSeen }) {
             onClick={onMarkSeen}
             className="text-[10px] text-purple-400 border border-purple-900 bg-[#1a0e20] px-3 py-1 rounded-sm font-mono tracking-wide hover:border-purple-500 transition-colors cursor-pointer"
           >
-            ✓ Marcar todas como vistas
+            ✓ Mark all as seen
           </button>
         )}
       </div>
@@ -19,7 +19,7 @@ export default function InvitationPanel({ invitations, onAccept, onMarkSeen }) {
       <div className="p-4 flex flex-col gap-3">
         {invitations.length === 0 ? (
           <p className="text-[12px] text-[#334450] font-mono text-center py-8">
-            // sin invitaciones pendientes
+            // without invitations, the world is a darker place... //
           </p>
         ) : (
           invitations.map(r => (
@@ -37,7 +37,7 @@ export default function InvitationPanel({ invitations, onAccept, onMarkSeen }) {
                 onClick={() => onAccept(r)}
                 className="text-[10px] text-purple-400 border border-purple-900 bg-[#1a0e20] px-3 py-1.5 rounded-sm font-mono tracking-wide hover:border-purple-500 transition-colors cursor-pointer"
               >
-                Entrar
+                Join
               </button>
             </div>
           ))

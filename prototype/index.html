@@ -730,7 +730,7 @@
         <!-- CHAT -->
         <div class="panel active" id="panel-chat">
             <div class="messages" id="messagesBox">
-                <div class="log-line">// conecta para empezar</div>
+                <div class="log-line">// connect to start chatting</div>
             </div>
             <div class="sendbar">
                 <input type="text" id="msgInput" placeholder="Escribe un mensaje... (Enter para enviar)" disabled
@@ -790,12 +790,11 @@
     <script>
         let stompClient = null;
         let currentToken = '';
-        let currentUser = null; // { id, username, email }
+        let currentUser = null;
         let activeRoomId = 1;
         let subscriptions = {};
         let pendingInvitations = [];
 
-        // ── UTILS ──────────────────────────────────────────────────────────────
         function fmt(iso) {
             if (!iso) return '';
             return new Date(iso).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
@@ -832,7 +831,6 @@
             box.appendChild(el);
         }
 
-        // ── TABS ───────────────────────────────────────────────────────────────
         function showTab(name, btn) {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -842,7 +840,6 @@
             if (name === 'inv' && stompClient) loadPendingInvitations();
         }
 
-        // ── TOAST ──────────────────────────────────────────────────────────────
         function showToast(title, body, onClick) {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -856,14 +853,13 @@
             setTimeout(() => { if (toast.parentNode) container.removeChild(toast); }, 6000);
         }
 
-        // ── CONNECT ────────────────────────────────────────────────────────────
         function connect() {
             const raw = document.getElementById('tokenInput').value.trim();
             if (!raw) { alert('Pega el JWT primero'); return; }
             currentToken = raw.startsWith('Bearer ') ? raw.slice(7) : raw;
 
             document.getElementById('messagesBox').innerHTML = '';
-            log('// conectando...');
+            log('// connected...');
 
             const socket = new SockJS('http://localhost:8080/ws');
             stompClient = Stomp.over(socket);
@@ -872,20 +868,20 @@
             stompClient.connect(
                 { Authorization: 'Bearer ' + currentToken },
                 function () {
-                    log('// conectado ✓', 'ok');
+                    log('// connected ✓', 'ok');
                     setConnected(true);
 
-                    // 1. Obtener usuario actual
+                    // 1. Obtain user info to know their ID and subscribe to personal topic for invitations
                     fetch('http://localhost:8080/api/users/me', { headers: authHeaders() })
                         .then(r => r.json())
                         .then(user => {
                             currentUser = user;
                             document.getElementById('current-user').textContent = user.username;
 
-                            // 2. Suscribirse al topic personal para notificaciones
+                            // 2. Subscribe to personal topic for invitations
                             stompClient.subscribe('/topic/user.' + user.id, function (msg) {
                                 const inv = JSON.parse(msg.body);
-                                // inv tiene { roomId, roomName, invitedBy } — viene de InvitationNotification
+
                                 pendingInvitations.push({ id: inv.roomId, name: inv.roomName, type: 'PRIVATE' });
                                 updateInvBadge(pendingInvitations.length);
                                 const safeRoomName = esc(inv.roomName);
@@ -895,15 +891,15 @@
                                     safeInvitedBy + ' te invitó a "' + safeRoomName + '"',
                                     () => switchRoom(inv.roomId, inv.roomName, null)
                                 );
-                                // Refrescar sidebar para que aparezca la sala privada
+                                // Refresh invitation list if the user is currently viewing it
                                 loadSidebar();
                             });
 
-                            // 3. Cargar invitaciones pendientes
+                            // 3. Load pending invitations on connect
                             loadPendingInvitations();
                         });
 
-                    // 4. Cargar sidebar y entrar al global
+                    // 4. Load sidebar rooms
                     loadSidebar();
                     joinRoom(1, 'Global Room');
                 },
@@ -925,7 +921,7 @@
             document.getElementById('current-user').textContent = '—';
             document.getElementById('active-room-label').textContent = '—';
             updateInvBadge(0);
-            log('// desconectado');
+            log('// disconnected', 'err');
         }
 
         function setConnected(on) {
@@ -936,12 +932,10 @@
             document.getElementById('sendBtn').disabled = !on;
         }
 
-        // ── INVITATIONS ────────────────────────────────────────────────────────
         function loadPendingInvitations() {
             fetch('http://localhost:8080/api/rooms/invitations/pending', { headers: authHeaders() })
                 .then(r => r.json())
                 .then(rooms => {
-                    // El endpoint devuelve RoomResponseDTO: { id, name, type }
                     pendingInvitations = rooms;
                     updateInvBadge(rooms.length);
                     renderInvList(rooms);
@@ -962,7 +956,6 @@
                 return;
             }
             rooms.forEach(r => {
-                // r tiene { id, name, type } — viene de RoomResponseDTO
                 const el = document.createElement('div');
                 el.className = 'inv-card';
                 const safeName = esc(r.name);
@@ -972,7 +965,7 @@
           <div class="inv-meta">id: ${r.id}</div>
         </div>
         <button class="btn purple" style="font-size:10px;padding:5px 12px;"
-          onclick="acceptInvitation(${r.id}, '${safeName}')">Entrar</button>`;
+          onclick="acceptInvitation(${r.id}, '${safeName}')">Enter</button>`;
                 list.appendChild(el);
             });
         }
@@ -992,7 +985,6 @@
             });
         }
 
-        // ── SIDEBAR ────────────────────────────────────────────────────────────
         function loadSidebar() {
             fetch('http://localhost:8080/api/rooms/thematic', { headers: authHeaders() })
                 .then(r => r.json())
@@ -1025,7 +1017,6 @@
                 });
         }
 
-        // ── SWITCH ROOM ────────────────────────────────────────────────────────
         function switchRoom(roomId, roomName, itemEl) {
             activeRoomId = roomId;
             document.getElementById('active-room-label').textContent = roomName;
@@ -1043,14 +1034,11 @@
             document.getElementById('active-room-label').textContent = roomName;
             if (!subscriptions[roomId]) {
                 subscriptions[roomId] = stompClient.subscribe('/topic/chat.room.' + roomId, function (msg) {
-                    // Leer activeRoomId en el momento de recibir, no en el de suscribirse
                     if (roomId !== activeRoomId) return;
                     const body = JSON.parse(msg.body);
-                    // Solo añadir si el box no tiene ya ese mensaje (evita duplicados al recargar)
                     addMsg(body.senderUsername, body.content, fmt(body.sentAt || body.createdAt), false);
                 });
             }
-            // Re-suscribirse si la conexión se cayó y el subscription quedó muerto
             else if (subscriptions[roomId].id === undefined) {
                 delete subscriptions[roomId];
                 joinRoom(roomId, roomName);
@@ -1059,7 +1047,7 @@
             fetch('http://localhost:8080/api/chat/room/' + roomId + '/history', { headers: authHeaders() })
                 .then(r => { if (r.status === 403) throw new Error('403 — sin acceso'); return r.json(); })
                 .then(messages => {
-                    if (!messages.length) { log('// sin historial previo'); return; }
+                    if (!messages.length) { log('// no previous history'); return; }
                     addDivider('historial');
                     messages.reverse().forEach(m => addMsg(m.senderUsername, m.content, fmt(m.sentAt || m.createdAt), true));
                     addDivider('en vivo');
@@ -1067,7 +1055,6 @@
                 .catch(err => log('// ' + err.message, 'err'));
         }
 
-        // ── SEND ───────────────────────────────────────────────────────────────
         function sendMessage() {
             const input = document.getElementById('msgInput');
             const content = input.value.trim();
@@ -1076,7 +1063,6 @@
             input.value = '';
         }
 
-        // ── ROOMS PANEL ────────────────────────────────────────────────────────
         function loadRooms() {
             const list = document.getElementById('roomsList');
             list.innerHTML = '<div class="no-room">cargando...</div>';
@@ -1111,7 +1097,6 @@
             return el;
         }
 
-        // ── CREATE PRIVATE ─────────────────────────────────────────────────────
         function createPrivateRoom() {
             const name = document.getElementById('newRoomName').value.trim();
             const emails = document.getElementById('newRoomEmails').value.split('\n').map(e => e.trim()).filter(Boolean);

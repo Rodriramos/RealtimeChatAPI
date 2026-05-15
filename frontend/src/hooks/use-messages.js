@@ -15,7 +15,7 @@ export function useMessages(activeRoomId, { subscribe, unsubscribe, connected })
     "Content-Type":  "application/json",
   };
 
-  // ── HISTORIAL ────────────────────────────────────────────────────────
+  // History
   const loadHistory = useCallback(async (roomId) => {
     setLoadingHistory(true);
     setError(null);
@@ -32,13 +32,12 @@ export function useMessages(activeRoomId, { subscribe, unsubscribe, connected })
     }
   }, [token]);
 
-  // ── SUSCRIPCIÓN ───────────────────────────────────────────────────────
+  // Subscription
   useEffect(() => {
     if (!activeRoomId) return;
 
     const topic = `/topic/chat.room.${activeRoomId}`;
 
-    // subscribe maneja internamente si está conectado o no
     subscribe(topic, (message) => {
       setMessages(prev => {
         if (prev.some(m => m.id === message.id)) return prev;
@@ -47,15 +46,15 @@ export function useMessages(activeRoomId, { subscribe, unsubscribe, connected })
     });
 
     return () => unsubscribe(topic);
-  }, [activeRoomId]); // ← ya no depende de connected
+  }, [activeRoomId]);
 
-  // ── HISTORIAL AL CAMBIAR DE SALA ──────────────────────────────────────
+  // History when switch room o conect
   useEffect(() => {
     if (!connected || !activeRoomId) return;
     loadHistory(activeRoomId);
   }, [activeRoomId, connected]);
 
-  // ── ENVIAR ────────────────────────────────────────────────────────────
+  // Send
   const sendMessage = useCallback((content, publish) => {
     if (!content.trim() || !connected) return;
     publish(`/app/chat.room.${activeRoomId}`, { content });

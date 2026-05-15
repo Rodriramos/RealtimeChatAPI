@@ -51,7 +51,7 @@ export default function Sidebar({
           Thematic
         </p>
         {thematicRooms.length === 0
-          ? <p className="px-4 text-[11px] text-[#2a3d48]">sin salas temáticas</p>
+          ? <p className="px-4 text-[11px] text-[#2a3d48]">No thematic rooms</p>
           : thematicRooms.map(r => (
               <RoomItem
                 key={r.id}
@@ -77,7 +77,7 @@ export default function Sidebar({
           )}
         </div>
         {privateRooms.length === 0
-          ? <p className="px-4 text-[11px] text-[#2a3d48]">sin salas privadas</p>
+          ? <p className="px-4 text-[11px] text-[#2a3d48]">No private rooms</p>
           : privateRooms.map(r => (
               <RoomItem
                 key={r.id}
