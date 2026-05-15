@@ -7,13 +7,13 @@ const WS_URL = 'http://localhost:8080/ws';
 
 export function useWebSocket() {
   const { token } = useAuth();
-  const clientRef = useRef(null);
+  const clientRef        = useRef(null);
   const subscriptionsRef = useRef({});
+  const pendingSubsRef   = useRef([]); // ← suscripciones pendientes antes de conectar
 
   const [connected, setConnected] = useState(false);
-  const [error, setError] = useState(null);
+  const [error,     setError]     = useState(null);
 
-  // Connect to the WebSocket server
   useEffect(() => {
     if (!token) return;
 
@@ -24,10 +24,22 @@ export function useWebSocket() {
       onConnect: () => {
         setConnected(true);
         setError(null);
+
+        // Ejecutar suscripciones que llegaron antes de conectar
+        pendingSubsRef.current.forEach(({ topic, callback }) => {
+          if (!subscriptionsRef.current[topic]) {
+            const sub = client.subscribe(topic, (msg) => {
+              callback(JSON.parse(msg.body));
+            });
+            subscriptionsRef.current[topic] = sub;
+          }
+        });
+        pendingSubsRef.current = [];
       },
 
       onDisconnect: () => {
         setConnected(false);
+        subscriptionsRef.current = {};
       },
 
       onStompError: (frame) => {
@@ -41,40 +53,40 @@ export function useWebSocket() {
     client.activate();
     clientRef.current = client;
 
-    // Cleanup on unmount
     return () => {
       client.deactivate();
       subscriptionsRef.current = {};
+      pendingSubsRef.current   = [];
     };
   }, [token]);
 
   const subscribe = useCallback((topic, callback) => {
-  console.log("subscribe llamado:", topic);
-  console.log("cliente conectado:", clientRef.current?.connected);
-  console.log("ya suscrito:", !!subscriptionsRef.current[topic]);
-  
-  if (!clientRef.current?.connected) return;
-  if (subscriptionsRef.current[topic]) return;
+    // Si ya está suscrito, ignorar
+    if (subscriptionsRef.current[topic]) return;
 
-  const subscription = clientRef.current.subscribe(topic, (message) => {
-    console.log("mensaje recibido en topic:", topic, message.body);
-    callback(JSON.parse(message.body));
-  });
-
-  subscriptionsRef.current[topic] = subscription;
-  return subscription;
-}, []);
-
-  // Unsubscribe from a topic
-  const unsubscribe = useCallback((topic) => {
-    const subscription = subscriptionsRef.current[topic];
-    if (subscription) {
-      subscription.unsubscribe();
-      delete subscriptionsRef.current[topic];
+    // Si el cliente ya está conectado, suscribirse ahora
+    if (clientRef.current?.connected) {
+      const sub = clientRef.current.subscribe(topic, (msg) => {
+        callback(JSON.parse(msg.body));
+      });
+      subscriptionsRef.current[topic] = sub;
+      return sub;
     }
+
+    // Si no está conectado aún, encolar para cuando conecte
+    pendingSubsRef.current.push({ topic, callback });
   }, []);
 
-  // Publish a message to a topic
+  const unsubscribe = useCallback((topic) => {
+    const sub = subscriptionsRef.current[topic];
+    if (sub) {
+      sub.unsubscribe();
+      delete subscriptionsRef.current[topic];
+    }
+    // También eliminar de pendientes si estaba ahí
+    pendingSubsRef.current = pendingSubsRef.current.filter(s => s.topic !== topic);
+  }, []);
+
   const publish = useCallback((topic, message) => {
     if (!clientRef.current?.connected) return;
     clientRef.current.publish({
