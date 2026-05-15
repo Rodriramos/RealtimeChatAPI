@@ -9,11 +9,6 @@ export function useMessages(activeRoomId, { subscribe, unsubscribe, connected })
   const [messages,       setMessages]       = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [error,          setError]          = useState(null);
-  const activeRoomIdRef = useRef(activeRoomId);
-
-  useEffect(() => {
-    activeRoomIdRef.current = activeRoomId;
-  }, [activeRoomId]);
 
   const headers = {
     "Authorization": "Bearer " + token,
@@ -37,25 +32,24 @@ export function useMessages(activeRoomId, { subscribe, unsubscribe, connected })
     }
   }, [token]);
 
-  // ── SUSCRIPCIÓN AL TOPIC ─────────────────────────────────────────────
+  // ── SUSCRIPCIÓN ───────────────────────────────────────────────────────
   useEffect(() => {
-  console.log("useEffect suscripción — connected:", connected, "roomId:", activeRoomId);
-  if (!connected || !activeRoomId) return;
+    if (!activeRoomId) return;
 
-  const topic = `/topic/chat.room.${activeRoomId}`;
-  console.log("suscribiendo a:", topic);
-  subscribe(topic, (message) => {
-    console.log("mensaje recibido:", message);
-    setMessages(prev => {
-      if (prev.some(m => m.id === message.id)) return prev;
-      return [...prev, { ...message, isHistory: false }];
+    const topic = `/topic/chat.room.${activeRoomId}`;
+
+    // subscribe maneja internamente si está conectado o no
+    subscribe(topic, (message) => {
+      setMessages(prev => {
+        if (prev.some(m => m.id === message.id)) return prev;
+        return [...prev, { ...message, isHistory: false }];
+      });
     });
-  });
 
-  return () => unsubscribe(topic);
-}, [activeRoomId, connected]);
+    return () => unsubscribe(topic);
+  }, [activeRoomId]); // ← ya no depende de connected
 
-  // ── HISTORIAL AL CAMBIAR DE SALA ─────────────────────────────────────
+  // ── HISTORIAL AL CAMBIAR DE SALA ──────────────────────────────────────
   useEffect(() => {
     if (!connected || !activeRoomId) return;
     loadHistory(activeRoomId);

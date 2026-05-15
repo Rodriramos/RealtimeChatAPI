@@ -29,18 +29,19 @@ public class ChatController {
     private final SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/chat.room.{roomId}")
-    public void handleRoomMessage(@DestinationVariable Long roomId, SendMessageDTO messageRequest, Principal principal) {
-        if (!roomService.hasAccessToRoom(roomId, principal.getName())) {
-            throw new AccessDeniedExcpetion("Room not found or access denied for room ID: " + roomId);
-        }
-
-        Message savedMessage = messageService.saveMessage(
-            messageRequest.content(), 
-            roomId, 
-            principal.getName());
-
-        messagingTemplate.convertAndSend("/topic/chat.room" + roomId, toResponse(savedMessage));
+public void handleRoomMessage(@DestinationVariable Long roomId, SendMessageDTO messageRequest, Principal principal) {
+    if (!roomService.hasAccessToRoom(roomId, principal.getName())) {
+        throw new AccessDeniedExcpetion("Room not found or access denied for room ID: " + roomId);
     }
+
+    Message savedMessage = messageService.saveMessage(
+        messageRequest.content(),
+        roomId,
+        principal.getName());
+
+    String destination = "/topic/chat.room." + roomId;
+    messagingTemplate.convertAndSend(destination, toResponse(savedMessage));
+}
 
     @GetMapping("/api/chat/room/{roomId}/history")
     @ResponseBody
