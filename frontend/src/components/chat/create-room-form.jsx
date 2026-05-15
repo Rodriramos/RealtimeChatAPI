@@ -23,20 +23,20 @@ export default function CreateRoomForm({ onSubmit, onCancel }) {
 
         <div>
           <p className="text-[9px] tracking-[0.2em] uppercase text-[#6a8a98] font-mono font-medium mb-1.5">
-            Nombre de la sala
+            Room Name
           </p>
           <input
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="ej: Proyecto Alpha"
+            placeholder="e.g.: Project Alpha"
             className="w-full bg-[#111618] border border-[#243038] text-[#c8d8e0] font-mono text-[12px] px-3 py-2 rounded-sm outline-none placeholder-[#334450] focus:border-[#007a60] transition-colors"
           />
         </div>
 
         <div>
           <p className="text-[9px] tracking-[0.2em] uppercase text-[#6a8a98] font-mono font-medium mb-1.5">
-            Emails de los invitados <span className="text-[#334450] normal-case tracking-normal">(uno por línea)</span>
+            Guest Emails <span className="text-[#334450] normal-case tracking-normal">(one per line)</span>
           </p>
           <textarea
             value={emails}
@@ -52,7 +52,7 @@ export default function CreateRoomForm({ onSubmit, onCancel }) {
           disabled={loading || !name.trim()}
           className="self-start px-5 py-2 bg-[#012820] border border-[#007a60] text-[#00d4aa] font-mono text-[11px] tracking-wide rounded-sm transition-all hover:bg-[#013d30] hover:border-[#00d4aa] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
         >
-          {loading ? "Creando..." : "Crear sala privada →"}
+          {loading ? "Creating..." : "Create private room →"}
         </button>
 
         {result && (

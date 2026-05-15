@@ -30,13 +30,13 @@ export default function Toast({ connected, user, subscribe, addInvitation, onRoo
           className="bg-[#1a0e20] border border-purple-800 rounded-md px-4 py-3 max-w-xs cursor-pointer animate-[fadeUp_0.25s_ease] hover:border-purple-500 transition-colors"
         >
           <p className="text-[10px] tracking-widest uppercase text-purple-400 font-mono mb-1">
-            🔒 Nueva invitación
+            🔒 New invitation
           </p>
           <p className="text-[12px] text-[#c8d8e0] font-sans font-light">
-            <span className="text-[#00d4aa]">{t.invitedBy}</span> te invitó a "{t.roomName}"
+            <span className="text-[#00d4aa]">{t.invitedBy}</span> invited you to "{t.roomName}"
           </p>
           <p className="text-[10px] text-[#334450] font-mono mt-1">
-            click para entrar
+            click to join
           </p>
         </div>
       ))}

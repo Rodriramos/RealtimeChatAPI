@@ -25,7 +25,7 @@ export function useWebSocket() {
         setConnected(true);
         setError(null);
 
-        // Ejecutar suscripciones que llegaron antes de conectar
+        // Execute pending subscriptions
         pendingSubsRef.current.forEach(({ topic, callback }) => {
           if (!subscriptionsRef.current[topic]) {
             const sub = client.subscribe(topic, (msg) => {
@@ -61,10 +61,10 @@ export function useWebSocket() {
   }, [token]);
 
   const subscribe = useCallback((topic, callback) => {
-    // Si ya está suscrito, ignorar
+    // If already subscribed, ignore
     if (subscriptionsRef.current[topic]) return;
 
-    // Si el cliente ya está conectado, suscribirse ahora
+    // If connected, subscribe immediately
     if (clientRef.current?.connected) {
       const sub = clientRef.current.subscribe(topic, (msg) => {
         callback(JSON.parse(msg.body));
@@ -73,7 +73,7 @@ export function useWebSocket() {
       return sub;
     }
 
-    // Si no está conectado aún, encolar para cuando conecte
+    // If not connected, add to pending subscriptions
     pendingSubsRef.current.push({ topic, callback });
   }, []);
 
@@ -83,7 +83,7 @@ export function useWebSocket() {
       sub.unsubscribe();
       delete subscriptionsRef.current[topic];
     }
-    // También eliminar de pendientes si estaba ahí
+    // Delete from pending if exists
     pendingSubsRef.current = pendingSubsRef.current.filter(s => s.topic !== topic);
   }, []);
 
