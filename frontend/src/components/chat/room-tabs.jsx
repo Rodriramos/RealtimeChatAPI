@@ -1,9 +1,9 @@
 export default function RoomTabs({ activeTab, onTabChange, invitationCount, activeRoomName, connected }) {
   const tabs = [
     { id: "chat",        label: activeRoomName || "Chat" },
-    { id: "rooms",       label: "Salas" },
-    { id: "invitations", label: "Invitaciones", badge: invitationCount },
-    { id: "create",      label: "+ Sala Privada" },
+    { id: "rooms",       label: "Rooms" },
+    { id: "invitations", label: "Invitations", badge: invitationCount },
+    { id: "create",      label: "+ Private Room" },
   ];
 
   return (

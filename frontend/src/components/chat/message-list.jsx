@@ -11,7 +11,7 @@ export default function MessageList({ messages, loading }) {
     return (
       <div className="flex-1 flex items-center justify-center bg-[#080c0e]">
         <span className="text-[11px] text-[#334450] font-mono tracking-widest animate-pulse">
-          // cargando historial...
+          // loading messages... //
         </span>
       </div>
     );
@@ -22,7 +22,7 @@ export default function MessageList({ messages, loading }) {
 
       {messages.length === 0 && (
         <p className="text-[11px] text-[#334450] font-mono self-center mt-8">
-          // sin mensajes aún
+          // no messages yet... //
         </p>
       )}
 

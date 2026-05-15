@@ -22,8 +22,8 @@ export default function RoomList({ thematicRooms, privateRooms, onEnter }) {
 
 const BADGE = {
   GLOBAL: { label: "global", classes: "bg-[#012018] text-[#00d4aa] border-[#007a60]" },
-  THEMATIC: { label: "temática", classes: "bg-[#0a1e28] text-[#4ab8d0] border-[#1a3a48]" },
-  PRIVATE: { label: "privada", classes: "bg-[#1a0e20] text-purple-400 border-purple-900" },
+  THEMATIC: { label: "thematic", classes: "bg-[#0a1e28] text-[#4ab8d0] border-[#1a3a48]" },
+  PRIVATE: { label: "private", classes: "bg-[#1a0e20] text-purple-400 border-purple-900" },
 };
 
 function RoomCard({ room, onEnter }) {
@@ -43,7 +43,7 @@ function RoomCard({ room, onEnter }) {
           onClick={() => onEnter(room)}
           className="text-[10px] text-[#6a8a98] border border-[#243038] bg-[#0d1214] px-3 py-1 rounded-sm font-mono hover:text-[#c8d8e0] hover:border-[#334450] transition-colors cursor-pointer"
         >
-          Entrar
+          Join
         </button>
       </div>
     </div>

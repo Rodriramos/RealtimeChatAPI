@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/use-auth.js";
 import { useWebSocket } from "../hooks/use-websocket.js";
 import { useRooms } from "../hooks/use-rooms.js";
 import { useMessages } from "../hooks/use-messages.js";
+import { useTyping } from "../hooks/use-typing.js";
 
 import Sidebar from "../components/chat/side-bar.jsx";
 import MessageList from "../components/chat/message-list.jsx";
@@ -18,7 +19,7 @@ export default function ChatPage() {
   const { connected, subscribe, unsubscribe, publish } = useWebSocket();
 
   const [activeRoom, setActiveRoom] = useState({ id: 1, name: "Global Room", type: "GLOBAL" });
-  const [activeTab,  setActiveTab]  = useState("chat");
+  const [activeTab, setActiveTab] = useState("chat");
 
   const {
     thematicRooms,
@@ -36,12 +37,16 @@ export default function ChatPage() {
     { subscribe, unsubscribe, connected }
   );
 
-  // Cargar invitaciones al conectar
+  const { typingText, notifyTyping, clearTyping } = useTyping(
+    activeRoom.id,
+    { subscribe, unsubscribe, publish, connected }
+  );
+
+  // Loading invitations on connect
   useEffect(() => {
     if (connected) loadInvitations();
   }, [connected]);
 
-  // ── HANDLERS ─────────────────────────────────────────────────────────
   const handleSwitchRoom = (room) => {
     setActiveRoom(room);
     setActiveTab("chat");
@@ -49,6 +54,7 @@ export default function ChatPage() {
 
   const handleSend = (content) => {
     sendMessage(content, publish);
+    clearTyping();
   };
 
   const handleCreateRoom = async (name, emails) => {
@@ -89,7 +95,12 @@ export default function ChatPage() {
         {activeTab === "chat" && (
           <>
             <MessageList messages={messages} loading={loadingHistory} />
-            <SendBar onSend={handleSend} disabled={!connected} />
+            {typingText && (
+              <div className="px-4 py-1 text-[11px] text-[#6a8a98] font-mono italic bg-[#080c0e]">
+                {typingText}
+              </div>
+            )}
+            <SendBar onSend={handleSend} disabled={!connected} onTyping={notifyTyping} />
           </>
         )}
 
