@@ -14,12 +14,8 @@ import CreateRoomForm from "../components/chat/create-room-form.jsx";
 import Toast from "../components/chat/toast.jsx";
 
 export default function ChatPage() {
-  console.log("ChatPage renderizando");
   const { user, logout } = useAuth();
-  console.log("user:", user);
-
   const { connected, subscribe, unsubscribe, publish } = useWebSocket();
-  console.log("connected:", connected);
 
   const [activeRoom, setActiveRoom] = useState({ id: 1, name: "Global Room", type: "GLOBAL" });
   const [activeTab,  setActiveTab]  = useState("chat");
