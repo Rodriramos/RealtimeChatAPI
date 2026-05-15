@@ -1,66 +1,74 @@
-import { useState } from 'react';
-import { useRooms } from '../../hooks/use-rooms';
-import { useWebSocket } from '../../hooks/use-websocket';
-import { useMessages } from '../../hooks/use-messages';
-import { useAuth } from '../../hooks/use-auth';
+import { useState, useEffect } from "react";
+import { useAuth } from "../hooks/use-auth.js";
+import { useWebSocket } from "../hooks/use-websocket.js";
+import { useRooms } from "../hooks/use-rooms.js";
+import { useMessages } from "../hooks/use-messages.js";
 
-import Sidebar from '../components/chat/side-bar';
-import MessageList from '../components/chat/message-list';
-import SendBar from '../components/chat/send-bar';
-import RoomTabs from '../components/chat/room-tabs';
-import Toast from '../components/ui/toast';
+import Sidebar from "../components/chat/side-bar.jsx";
+import MessageList from "../components/chat/message-list.jsx";
+import SendBar from "../components/chat/send-bar.jsx";
+import RoomTabs from "../components/chat/room-tabs.jsx";
+import RoomList from "../components/chat/room-list.jsx";
+import InvitationPanel from "../components/chat/invitation-panel.jsx";
+import CreateRoomForm from "../components/chat/create-room-form.jsx";
+import Toast from "../components/chat/toast.jsx";
 
 export default function ChatPage() {
+  console.log("ChatPage renderizando");
   const { user, logout } = useAuth();
+  console.log("user:", user);
+
+  const { connected, subscribe, unsubscribe, publish } = useWebSocket();
+  console.log("connected:", connected);
 
   const [activeRoom, setActiveRoom] = useState({ id: 1, name: "Global Room", type: "GLOBAL" });
-  const [activeTab, setActiveTab] = useState("chat");
+  const [activeTab,  setActiveTab]  = useState("chat");
 
-  const { connected, error, subscribe, unsubscribe, publish } = useWebSocket();
-
-  const { 
-    thematicRooms, 
-    privateRooms, 
+  const {
+    thematicRooms,
+    privateRooms,
     invitations,
     loading: roomsLoading,
-    loadAll,
-    createPrivateRoom, 
-    loadInvitations,
+    createPrivateRoom,
     markInvitationsSeen,
-    addInvitation
+    addInvitation,
+    loadInvitations,
   } = useRooms();
 
   const { messages, loadingHistory, sendMessage } = useMessages(
-    activeRoom.id, 
+    activeRoom.id,
     { subscribe, unsubscribe, connected }
   );
 
-  // Notifications in real time for new invitations
-  useState(() => {
-    if (!connected || !user) return;
-    subscribe(`/topic/user${user.id}`, (invitation) => {
-      addInvitation({ id: inv.roomId, name: inv.roomName, type: "PRIVATE" });
-    });
-  }, [connected, user]);
+  // Cargar invitaciones al conectar
+  useEffect(() => {
+    if (connected) loadInvitations();
+  }, [connected]);
 
+  // ── HANDLERS ─────────────────────────────────────────────────────────
   const handleSwitchRoom = (room) => {
     setActiveRoom(room);
     setActiveTab("chat");
-  }
+  };
 
   const handleSend = (content) => {
     sendMessage(content, publish);
-  }
+  };
 
-  const handleCreateRoom = async (name, invitedEmails) => {
-    const room = await createPrivateRoom(name, invitedEmails);
+  const handleCreateRoom = async (name, emails) => {
+    const room = await createPrivateRoom(name, emails);
     handleSwitchRoom(room);
-  }
+    return room;
+  };
+
+  const handleAcceptInvitation = (room) => {
+    markInvitationsSeen();
+    handleSwitchRoom(room);
+  };
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: "var(--bg)" }}>
+    <div className="flex h-screen bg-[#080c0e] overflow-hidden">
 
-      {/* SIDEBAR */}
       <Sidebar
         user={user}
         connected={connected}
@@ -72,10 +80,8 @@ export default function ChatPage() {
         onLogout={logout}
       />
 
-      {/* MAIN */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div className="flex flex-col flex-1 overflow-hidden">
 
-        {/* TABS */}
         <RoomTabs
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -84,48 +90,38 @@ export default function ChatPage() {
           connected={connected}
         />
 
-        {/* CHAT */}
         {activeTab === "chat" && (
           <>
-            <MessageList
-              messages={messages}
-              loading={loadingHistory}
-            />
-            <SendBar
-              onSend={handleSend}
-              disabled={!connected}
-            />
+            <MessageList messages={messages} loading={loadingHistory} />
+            <SendBar onSend={handleSend} disabled={!connected} />
           </>
         )}
 
-        {/* ROOMS */}
         {activeTab === "rooms" && (
-          <RoomsList
+          <RoomList
             thematicRooms={thematicRooms}
             privateRooms={privateRooms}
             onEnter={handleSwitchRoom}
           />
         )}
 
-          {/* INVITATIONS */}
         {activeTab === "invitations" && (
           <InvitationPanel
             invitations={invitations}
-            onAccept={(room) => { markInvitationsSeen(); handleSwitchRoom(room); }}
+            onAccept={handleAcceptInvitation}
             onMarkSeen={markInvitationsSeen}
           />
         )}
 
-        {/* CREATE ROOM */}
         {activeTab === "create" && (
           <CreateRoomForm
             onSubmit={handleCreateRoom}
             loading={roomsLoading}
           />
         )}
+
       </div>
 
-      {/* TOASTS */}
       <Toast
         connected={connected}
         user={user}
@@ -133,6 +129,7 @@ export default function ChatPage() {
         addInvitation={addInvitation}
         onRoomClick={handleSwitchRoom}
       />
+
     </div>
   );
 }
