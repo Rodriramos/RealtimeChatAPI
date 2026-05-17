@@ -6,15 +6,15 @@ import { useAuth } from "../../hooks/use-auth";
 const API = "http://localhost:8080";
 
 const FORMAT_BUTTONS = [
-  { label: "B",   title: "Negrita", action: (e) => e.chain().focus().toggleBold().run(),   active: (e) => e.isActive("bold"),   style: "font-bold" },
-  { label: "I",   title: "Cursiva", action: (e) => e.chain().focus().toggleItalic().run(), active: (e) => e.isActive("italic"), style: "italic" },
-  { label: "</>", title: "Código",  action: (e) => e.chain().focus().toggleCode().run(),   active: (e) => e.isActive("code"),   style: "font-mono text-[10px]" },
+  { label: "B", title: "Negrita", action: (e) => e.chain().focus().toggleBold().run(), active: (e) => e.isActive("bold"), style: "font-bold" },
+  { label: "I", title: "Cursiva", action: (e) => e.chain().focus().toggleItalic().run(), active: (e) => e.isActive("italic"), style: "italic" },
+  { label: "</>", title: "Código", action: (e) => e.chain().focus().toggleCode().run(), active: (e) => e.isActive("code"), style: "font-mono text-[10px]" },
 ];
 
 export default function SendBar({ onSend, disabled, onTyping }) {
   const { token } = useAuth();
-  const [isEmpty,    setIsEmpty]    = useState(true);
-  const [uploading,  setUploading]  = useState(false);
+  const [isEmpty, setIsEmpty] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [filePreview, setFilePreview] = useState(null); // { url, name, type }
   const fileInputRef = useRef(null);
 
@@ -59,9 +59,9 @@ export default function SendBar({ onSend, disabled, onTyping }) {
       const data = await res.json();
 
       setFilePreview({
-        url:          data.url,
-        name:         file.name,
-        resourceType: data.resourceType,
+        url: data.url,
+        name: file.name,
+        resourceType: data.messageType,
       });
     } catch (err) {
       console.error("Upload error:", err);
@@ -79,21 +79,19 @@ export default function SendBar({ onSend, disabled, onTyping }) {
     if (editor.isEmpty && !filePreview) return;
 
     if (filePreview) {
-      // Mensaje con archivo
       onSend({
-        content:      editor.isEmpty ? "" : editor.getHTML(),
-        messageType:  filePreview.resourceType === "video" ? "VIDEO" : "IMAGE",
-        fileUrl:      filePreview.url,
-        fileName:     filePreview.name,
+        content: editor.isEmpty ? "" : editor.getHTML(),
+        messageType: filePreview.messageType, // ← aquí
+        fileUrl: filePreview.url,
+        fileName: filePreview.name,
       });
       setFilePreview(null);
     } else {
-      // Mensaje de texto
       onSend({
-        content:     editor.getHTML(),
+        content: editor.getHTML(),
         messageType: "TEXT",
-        fileUrl:     null,
-        fileName:    null,
+        fileUrl: null,
+        fileName: null,
       });
     }
 
@@ -153,7 +151,7 @@ export default function SendBar({ onSend, disabled, onTyping }) {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*,video/*"
+          accept="image/*, video/*, application/pdf"
           onChange={handleFileChange}
           className="hidden"
         />

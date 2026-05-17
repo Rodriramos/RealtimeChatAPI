@@ -34,10 +34,16 @@ public class UploadController {
 
         UploadResultDTO result = uploadService.uploadFile(file);
 
+        String messageType = switch (result.messageType()) {
+            case "video" -> "VIDEO";
+            case "raw" -> "FILE";
+            default -> "IMAGE";
+        };
+
         return ResponseEntity.ok(new UploadResultDTO(
             result.url(),
             result.publicId(),
-            result.resourceType()
+            messageType
         ));
     }
 }
