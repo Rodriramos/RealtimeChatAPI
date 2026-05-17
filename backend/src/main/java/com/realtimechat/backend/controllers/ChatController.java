@@ -65,9 +65,9 @@ public class ChatController {
         }
 
         messagingTemplate.convertAndSend(
-        "/topic/chat.room." + roomId + ".typing",
-        new TypingNotificationDTO(principal.getName())
-    );
+            "/topic/chat.room." + roomId + ".typing",
+            new TypingNotificationDTO(principal.getName())
+        );
     }
 
     private MessageResponseDTO toResponse(Message message) {
