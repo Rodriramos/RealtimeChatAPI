@@ -4,18 +4,22 @@ export default function CreateRoomForm({ onSubmit, onCancel }) {
   const [name, setName] = useState("");
   const [emails, setEmails] = useState("");
   const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!name.trim()) { setResult({ ok: false, message: "The room name is required." }); return; }
-    const emailList = emails.split(",").map(e => e.trim()).filter(Boolean);
-
-    try {
-      const room = await onSubmit(name.trim(), emailList);
-      setResult({ ok: true, message: `Room "${room.name}" created successfully!` });
-    } catch (error) {
-      setResult({ ok: false, message: "Failed to create room." });
-    }
-  };
+  if (!name.trim()) { setResult({ ok: false, message: "The room name is required." }); return; }
+  const emailList = emails.split("\n").map(e => e.trim()).filter(Boolean);
+  setLoading(true);
+  try {
+    const room = await onSubmit(name.trim(), emailList);
+    setResult({ ok: true, message: `Room "${room.name}" created successfully!` });
+    setName(""); setEmails("");
+  } catch {
+    setResult({ ok: false, message: "Failed to create room." });
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#080c0e] p-6">
