@@ -41,29 +41,69 @@ export default function MessageList({ messages, loading }) {
 function MessageBubble({ msg }) {
   const time = msg.sentAt || msg.createdAt
     ? new Date(msg.sentAt ?? msg.createdAt).toLocaleTimeString("es-ES", {
-        hour: "2-digit", minute: "2-digit",
-      })
+      hour: "2-digit", minute: "2-digit",
+    })
     : "";
 
   return (
     <div className="flex flex-col gap-0.5 animate-[fadeUp_0.2s_ease]">
       <div className="flex items-baseline gap-2">
-        <span className={`text-[10px] font-semibold font-mono ${
-          msg.isHistory ? "text-[#007a60]" : "text-[#00d4aa]"
-        }`}>
+        <span className={`text-[10px] font-semibold font-mono ${msg.isHistory ? "text-[#007a60]" : "text-[#00d4aa]"
+          }`}>
           {msg.senderUsername}
         </span>
         <span className="text-[10px] text-[#334450] font-mono">{time}</span>
       </div>
 
-      <div
-        className={`inline-block max-w-[85%] text-[12.5px] leading-relaxed px-2.5 py-1.5 rounded-tr rounded-br rounded-bl prose-chat ${
-          msg.isHistory
-            ? "bg-[#0d1214] border border-[#1c2428] text-[#6a8a98]"
-            : "bg-[#111618] border border-[#1c2428] text-[#c8d8e0]"
-        }`}
-        dangerouslySetInnerHTML={{ __html: msg.content }}
-      />
-    </div>
+      <div className={`inline-block max-w-[85%] rounded-tr rounded-br rounded-bl overflow-hidden ${msg.isHistory
+        ? "bg-[#0d1214] border border-[#1c2428]"
+        : "bg-[#111618] border border-[#1c2428]"
+        }`}>
+
+        {/* IMAGEN */}
+        {msg.messageType === "IMAGE" && msg.fileUrl && (
+          <img
+            src={msg.fileUrl}
+            alt={msg.fileName || "imagen"}
+            className="max-w-xs max-h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => window.open(msg.fileUrl, "_blank")}
+          />
+        )}
+
+        {/* VÍDEO */}
+        {msg.messageType === "VIDEO" && msg.fileUrl && (
+          <video
+            src={msg.fileUrl}
+            controls
+            className="max-w-xs max-h-64"
+          />
+        )}
+
+        {/* TEXTO */}
+        {msg.content && (
+          <div
+            className={`text-[12.5px] leading-relaxed px-2.5 py-1.5 prose-chat ${msg.isHistory ? "text-[#6a8a98]" : "text-[#c8d8e0]"
+              }`}
+            dangerouslySetInnerHTML={{ __html: msg.content }}
+          />
+        )}
+
+        {/* PDF / ARCHIVO */}
+        {msg.messageType === "FILE" && msg.fileUrl && (
+          <a
+            href={msg.fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 text-[#00d4aa] hover:text-[#00ffcc] transition-colors"
+          >
+            <span className="text-lg">📄</span>
+            <span className="text-[12px] font-mono underline underline-offset-2">
+              {msg.fileName || "archivo"}
+            </span>
+          </a>
+        )}
+
+      </div>
+    </div >
   );
 }

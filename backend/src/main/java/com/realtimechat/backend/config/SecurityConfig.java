@@ -29,22 +29,36 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/oauth2/**", "/login/oauth2/**", "/api/**" ,"/ws/**")
-                .permitAll()
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .oauth2Login(oauth2 -> oauth2
-                .successHandler(oAuth2SuccessHandler)
-            );
-        return http.build();
-    }
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/auth/**", "/oauth2/**", "/login/oauth2/**", "/ws/**")
+            .permitAll()
+            .anyRequest().authenticated()
+        )
+        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+        )
+        .oauth2Login(oauth2 -> oauth2
+            .successHandler(oAuth2SuccessHandler)
+        )
+        .exceptionHandling(ex -> ex
+            .authenticationEntryPoint((request, response, authException) -> {
+                // If the request has an Authorization header, return 401. Otherwise, redirect to Google OAuth2 login.
+                if (request.getHeader("Authorization") != null) {
+                    response.setStatus(401);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                } else {
+                    response.sendRedirect("/oauth2/authorization/google");
+                }
+            })
+        );
+    return http.build();
+}
 
     @Bean
     public PasswordEncoder passwordEncoder() {

@@ -6,13 +6,13 @@ const API_URL = "http://localhost:8080/api";
 export function useMessages(activeRoomId, { subscribe, unsubscribe, connected }) {
   const { token } = useAuth();
 
-  const [messages,       setMessages]       = useState([]);
+  const [messages, setMessages] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [error,          setError]          = useState(null);
+  const [error, setError] = useState(null);
 
   const headers = {
     "Authorization": "Bearer " + token,
-    "Content-Type":  "application/json",
+    "Content-Type": "application/json",
   };
 
   // History
@@ -55,9 +55,10 @@ export function useMessages(activeRoomId, { subscribe, unsubscribe, connected })
   }, [activeRoomId, connected]);
 
   // Send
-  const sendMessage = useCallback((content, publish) => {
-    if (!content.trim() || !connected) return;
-    publish(`/app/chat.room.${activeRoomId}`, { content });
+  const sendMessage = useCallback((payload, publish) => {
+    if (!connected) return;
+    if (!payload.content?.trim() && !payload.fileUrl) return;
+    publish(`/app/chat.room.${activeRoomId}`, payload);
   }, [activeRoomId, connected]);
 
   return { messages, loadingHistory, error, sendMessage, loadHistory };
