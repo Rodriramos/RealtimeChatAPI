@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function MessageList({ messages, loading }) {
   const bottomRef = useRef(null);
@@ -37,8 +39,11 @@ export default function MessageList({ messages, loading }) {
 }
 
 function MessageBubble({ msg }) {
-  const time = msg.sentAt || msg.createdAt ? new Date(msg.sentAt ?? msg.createdAt)
-    .toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : "";
+  const time = msg.sentAt || msg.createdAt
+    ? new Date(msg.sentAt ?? msg.createdAt).toLocaleTimeString("es-ES", {
+        hour: "2-digit", minute: "2-digit",
+      })
+    : "";
 
   return (
     <div className="flex flex-col gap-0.5 animate-[fadeUp_0.2s_ease]">
@@ -50,13 +55,15 @@ function MessageBubble({ msg }) {
         </span>
         <span className="text-[10px] text-[#334450] font-mono">{time}</span>
       </div>
-      <div className={`inline-block max-w-[85%] text-[12.5px] leading-relaxed px-2.5 py-1.5 rounded-tr rounded-br rounded-bl font-sans font-light ${
-        msg.isHistory
-          ? "bg-[#0d1214] border border-[#1c2428] text-[#6a8a98]"
-          : "bg-[#111618] border border-[#1c2428] text-[#c8d8e0]"
-      }`}>
-        {msg.content}
-      </div>
+
+      <div
+        className={`inline-block max-w-[85%] text-[12.5px] leading-relaxed px-2.5 py-1.5 rounded-tr rounded-br rounded-bl prose-chat ${
+          msg.isHistory
+            ? "bg-[#0d1214] border border-[#1c2428] text-[#6a8a98]"
+            : "bg-[#111618] border border-[#1c2428] text-[#c8d8e0]"
+        }`}
+        dangerouslySetInnerHTML={{ __html: msg.content }}
+      />
     </div>
-  )
+  );
 }

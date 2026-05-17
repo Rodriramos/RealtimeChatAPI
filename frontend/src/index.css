@@ -3,3 +3,17 @@
 * {
   font-family: 'Syne Mono', 'IBM Plex Mono' , monospace;
 }
+
+.prose-chat strong { font-weight: 600; color: #e0f0f8; }
+.prose-chat em     { font-style: italic; color: #a0c8d8; }
+.prose-chat code   { background: #0a1418; border: 1px solid #243038; color: #00d4aa; font-family: monospace; font-size: 11px; padding: 1px 6px; border-radius: 3px; }
+.prose-chat pre    { background: #0a1418; border: 1px solid #243038; padding: 8px 12px; border-radius: 4px; overflow-x: auto; margin: 4px 0; }
+.prose-chat pre code { background: none; border: none; padding: 0; color: #c8d8e0; }
+.prose-chat a      { color: #00d4aa; text-decoration: underline; }
+.prose-chat p      { margin: 0; }
+
+/* Estilos del editor Tiptap */
+.tiptap strong { font-weight: 600; color: #e0f0f8; }
+.tiptap em     { font-style: italic; color: #a0c8d8; }
+.tiptap code   { background: #0a1418; border: 1px solid #243038; color: #00d4aa; font-family: monospace; font-size: 11px; padding: 1px 6px; border-radius: 3px; }
+.tiptap p      { margin: 0; }
