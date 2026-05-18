@@ -23,8 +23,10 @@ public class UploadService {
 
         if (contentType.startsWith("video")) {
             resourceType = "video";
+        } else if (contentType.startsWith("audio")) {
+            resourceType = "video";
         } else if (contentType.equals("application/pdf") || contentType.startsWith("application")) {
-            resourceType = "raw"; // ← Cloudinary usa "raw" para PDFs y otros archivos
+            resourceType = "raw";
         } else {
             resourceType = "image";
         }

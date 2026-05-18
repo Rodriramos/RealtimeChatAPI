@@ -2,49 +2,75 @@ export default function RoomList({ thematicRooms, privateRooms, onEnter }) {
   const globalRoom = { id: 1, name: "Global Room", type: "GLOBAL" };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#080c0e]">
+    // CAMBIO: Fondo oscuro oficial de chat (#0e1621)
+    <div className="flex-1 overflow-y-auto bg-[#0e1621] font-sans">
 
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#1c2428]">
-        <span className="text-[11px] text-[#6a8a98] font-mono">
-          Todas las salas disponibles
+      {/* CABECERA DE LA LISTA */}
+      <div className="flex items-center px-6 py-3.5 border-b border-[#101921] bg-[#17212b]">
+        <span className="text-[13px] text-[#5288c1] font-medium tracking-wide">
+          Available Rooms & Channels
         </span>
       </div>
 
-      <div className="p-4 flex flex-col gap-2">
-        <RoomCard room={globalRoom} onEnter={onEnter} />
-        {thematicRooms.map(r => <RoomCard key={r.id} room={r} onEnter={onEnter} />)}
-        {privateRooms.map(r => <RoomCard key={r.id} room={r} onEnter={onEnter} />)}
+      {/* LISTA DE SALAS ESTILO TELEGRAM (Filas compactas e interactivas) */}
+      <div className="flex flex-col divide-y divide-[#101921]">
+        <RoomRow room={globalRoom} onEnter={onEnter} />
+        {thematicRooms.map(r => <RoomRow key={r.id} room={r} onEnter={onEnter} />)}
+        {privateRooms.map(r => <RoomRow key={r.id} room={r} onEnter={onEnter} />)}
       </div>
 
     </div>
   );
 }
 
-const BADGE = {
-  GLOBAL: { label: "global", classes: "bg-[#012018] text-[#00d4aa] border-[#007a60]" },
-  THEMATIC: { label: "thematic", classes: "bg-[#0a1e28] text-[#4ab8d0] border-[#1a3a48]" },
-  PRIVATE: { label: "private", classes: "bg-[#1a0e20] text-purple-400 border-purple-900" },
+// Configuración de estilos para los Avatares/Badges basados en Telegram Modos
+const ROOM_META = {
+  GLOBAL: { label: "Global", icon: "🌐", bg: "bg-[#2481cc] text-white" },
+  THEMATIC: { label: "Thematic", icon: "💬", bg: "bg-[#2b5278] text-[#80b1ea]" },
+  PRIVATE: { label: "Private", icon: "🔒", bg: "bg-[#2f1f3a] text-purple-400" },
 };
 
-function RoomCard({ room, onEnter }) {
-  const badge = BADGE[room.type] ?? { label: room.type, classes: "bg-[#111618] text-[#6a8a98] border-[#1c2428]" };
+function RoomRow({ room, onEnter }) {
+  const meta = ROOM_META[room.type] ?? { label: "Room", icon: "👥", bg: "bg-[#1d2a39] text-[#708499]" };
 
   return (
-    <div className="flex items-center justify-between bg-[#111618] border border-[#1c2428] rounded px-4 py-2.5 hover:border-[#243038] transition-colors">
-      <div className="flex flex-col gap-0.5">
-        <span className="text-[13px] text-[#c8d8e0] font-sans font-light">{room.name}</span>
-        <span className="text-[10px] text-[#334450] font-mono">id: {room.id}</span>
+    // CAMBIO: Toda la fila es un botón interactivo, sin bordes de tarjeta individuales
+    <div 
+      onClick={() => onEnter(room)}
+      className="flex items-center justify-between px-6 py-3.5 hover:bg-[#17212b] transition-colors cursor-pointer group"
+    >
+      <div className="flex items-center gap-3.5 min-w-0">
+        
+        {/* AVATAR ESTILO TELEGRAM (Círculo con icono/inicial) */}
+        <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-lg font-medium shadow-sm ${meta.bg}`}>
+          {meta.icon}
+        </div>
+
+        {/* INFORMACIÓN DE LA SALA */}
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <span className="text-[14.5px] text-[#f5f5f5] font-medium group-hover:text-[#2481cc] transition-colors truncate">
+            {room.name}
+          </span>
+          <span className="text-[12.5px] text-[#708499] font-normal">
+            Click to join conversation
+          </span>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        <span className={`text-[9px] tracking-widest uppercase px-2 py-px rounded-sm border font-mono font-medium ${badge.classes}`}>
-          {badge.label}
+
+      {/* DETALLES/BADGE DE TIPO DE SALA */}
+      <div className="flex items-center gap-3">
+        <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full ${
+          room.type === 'GLOBAL' ? 'bg-[rgba(36,129,204,0.15)] text-[#2481cc]' :
+          room.type === 'THEMATIC' ? 'bg-[rgba(82,136,193,0.15)] text-[#5288c1]' :
+          'bg-[rgba(168,85,247,0.15)] text-purple-400'
+        }`}>
+          {meta.label}
         </span>
-        <button
-          onClick={() => onEnter(room)}
-          className="text-[10px] text-[#6a8a98] border border-[#243038] bg-[#0d1214] px-3 py-1 rounded-sm font-mono hover:text-[#c8d8e0] hover:border-[#334450] transition-colors cursor-pointer"
-        >
-          Join
-        </button>
+        
+        {/* Icono flecha sutil indicador de acción */}
+        <span className="text-[#52677a] group-hover:text-[#f5f5f5] transition-colors text-sm pr-1">
+          ➔
+        </span>
       </div>
     </div>
   );
