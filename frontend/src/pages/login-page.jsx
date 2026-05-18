@@ -80,109 +80,96 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#06080a] flex items-center justify-center font-sans relative overflow-hidden">
-
-      {/* Grid background */}
-      <div
-        className="absolute inset-0 opacity-40 pointer-events-none"
-        style={{
-          backgroundImage: "linear-gradient(#1a2228 1px, transparent 1px), linear-gradient(90deg, #1a2228 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-        }}
-      />
-
-      {/* Glow blob */}
+    <div className="min-h-screen bg-[#0e1621] flex items-center justify-center font-sans relative overflow-hidden">
       <div className="absolute w-150 h-150 rounded-full pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{ background: "radial-gradient(circle, rgba(0,229,176,0.06) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(circle, rgba(36,129,204,0.05) 0%, transparent 70%)" }}
       />
 
-      {/* Card */}
-      <div className="relative z-10 w-full max-w-105 mx-4 px-10 py-12 bg-[#0c1015] border border-[#253040] rounded animate-[cardIn_0.4s_cubic-bezier(0.16,1,0.3,1)]">
-
-        {/* Logo */}
-        <p className="font-mono text-[11px] tracking-[0.25em] uppercase text-[#00e5b0] mb-8">
-          realtime<span className="text-[#5a7888]">/</span>chat
+      {/* Form card */}
+      <div className="relative z-10 w-full max-w-105 mx-4 px-10 py-12 bg-[#182533] border border-[#202b36] rounded-xl shadow-xl animate-[cardIn_0.4s_cubic-bezier(0.16,1,0.3,1)]">
+        
+        <p className="font-sans text-[13px] tracking-wide text-[#2481cc] mb-8 text-center uppercase font-extrabold">
+          Realtime Chat
         </p>
 
-        {/* Tabs */}
-        <div className="flex border-b border-[#1a2228] mb-8">
+        <div className="flex border-b border-[#101921] mb-8">
           {["login", "register"].map(m => (
             <button
               key={m}
               onClick={() => switchMode(m)}
-              className={`flex-1 py-2.5 text-[12px] tracking-widest uppercase font-semibold border-b-2 -mb-px transition-all cursor-pointer bg-none border-t-0 border-l-0 border-r-0
+              className={`flex-1 py-3 text-[14px] font-medium border-b-2 -mb-px transition-all cursor-pointer bg-none border-t-0 border-l-0 border-r-0
                 ${mode === m
-                  ? "text-[#00e5b0] border-[#00e5b0]"
-                  : "text-[#5a7888] border-transparent hover:text-[#dce8f0]"
+                  ? "text-[#2481cc] border-[#2481cc]"
+                  : "text-[#708499] border-transparent hover:text-[#f5f5f5]"
                 }`}
             >
-              {m === "login" ? "Sign in" : "Register"}
+              {m === "login" ? "Sign In" : "Register"}
             </button>
           ))}
         </div>
 
         {/* LOGIN FORM */}
         {mode === "login" && (
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+          <form onSubmit={handleLogin} className="flex flex-col gap-5">
             <Field label="Username">
-              <Input type="text" placeholder="your_username"
+              <Input type="text" placeholder="Enter your username"
                 value={username} onChange={e => setUsername(e.target.value)} required />
             </Field>
             <Field label="Password">
-              <Input type="password" placeholder="••••••••"
+              <Input type="password" placeholder="Enter password"
                 value={password} onChange={e => setPassword(e.target.value)} required />
             </Field>
             <PrimaryBtn loading={loading}>
-              {loading ? "Signing in..." : "Sign in →"}
+              {loading ? "Signing in..." : "Sign In"}
             </PrimaryBtn>
           </form>
         )}
 
         {/* REGISTER FORM */}
         {mode === "register" && (
-          <form onSubmit={handleRegister} className="flex flex-col gap-4">
+          <form onSubmit={handleRegister} className="flex flex-col gap-5">
             <Field label="Username">
-              <Input type="text" placeholder="your_username"
+              <Input type="text" placeholder="Choose a username"
                 value={username} onChange={e => setUsername(e.target.value)} required />
             </Field>
             <Field label="Email">
-              <Input type="email" placeholder="you@email.com"
+              <Input type="email" placeholder="name@example.com"
                 value={email} onChange={e => setEmail(e.target.value)} required />
             </Field>
             <Field label="Password">
-              <Input type="password" placeholder="••••••••"
+              <Input type="password" placeholder="Create password"
                 value={password} onChange={e => setPassword(e.target.value)} required />
             </Field>
             <Field label="Confirm password">
-              <Input type="password" placeholder="••••••••"
+              <Input type="password" placeholder="Repeat password"
                 value={confirm} onChange={e => setConfirm(e.target.value)} required />
             </Field>
             <PrimaryBtn loading={loading}>
-              {loading ? "Creating account..." : "Create account →"}
+              {loading ? "Registering..." : "Register"}
             </PrimaryBtn>
           </form>
         )}
 
         {/* DIVIDER */}
-        <div className="flex items-center gap-3 my-5">
-          <div className="flex-1 h-px bg-[#1a2228]" />
-          <span className="text-[10px] tracking-widest uppercase text-[#2a3d48]">or</span>
-          <div className="flex-1 h-px bg-[#1a2228]" />
+        <div className="flex items-center gap-3 my-6">
+          <div className="flex-1 h-px bg-[#101921]" />
+          <span className="text-[11px] text-[#52677a] uppercase font-medium tracking-wider">or</span>
+          <div className="flex-1 h-px bg-[#101921]" />
         </div>
 
-        {/* GOOGLE */}
+        {/* GOOGLE BUTTON - Adaptado a la sobriedad de Telegram */}
         <button
           onClick={handleGoogle}
-          className="w-full flex items-center justify-center gap-2.5 py-3 bg-[#06080a] border border-[#253040] text-[#dce8f0] text-[12px] tracking-widest uppercase font-semibold rounded-sm hover:bg-[#0c1015] hover:border-[#3a5060] transition-all cursor-pointer"
+          className="w-full flex items-center justify-center gap-2.5 py-3 bg-[#101921] border border-[#202b36] text-[#f5f5f5] text-[13px] font-medium rounded-lg hover:bg-[#141f29] transition-all cursor-pointer"
         >
           <GoogleIcon />
           Continue with Google
         </button>
 
-        {/* ERROR */}
+        {/* ERROR - Tono rojo pastel/salmón más integrado */}
         {error && (
-          <div className="mt-4 px-3 py-2.5 bg-[rgba(255,77,106,0.08)] border border-[rgba(255,77,106,0.25)] rounded-sm text-[12px] text-[#ff4d6a] font-mono">
-            ⚠ {error}
+          <div className="mt-5 px-4 py-3 bg-[rgba(239,71,111,0.08)] border border-[rgba(239,71,111,0.2)] rounded-lg text-[13px] text-[#ef476f] text-center">
+            {error}
           </div>
         )}
 
@@ -190,7 +177,7 @@ export default function LoginPage() {
 
       <style>{`
         @keyframes cardIn {
-          from { opacity: 0; transform: translateY(16px); }
+          from { opacity: 0; transform: translateY(12px); }
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
@@ -204,7 +191,8 @@ export default function LoginPage() {
 function Field({ label, children }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[10px] tracking-[0.15em] uppercase text-[#5a7888] font-semibold">
+      {/* CAMBIO: Fuente sans normal y color de etiqueta gris azulado suave */}
+      <label className="text-[12px] font-medium text-[#708499] ml-1">
         {label}
       </label>
       {children}
@@ -216,7 +204,7 @@ function Input({ ...props }) {
   return (
     <input
       {...props}
-      className="w-full bg-[#06080a] border border-[#253040] text-[#dce8f0] font-mono text-[13px] px-3.5 py-2.5 rounded-sm outline-none placeholder-[#2a3d48] transition-colors focus:border-[#008060]"
+      className="w-full bg-[#101921] border border-[#202b36] text-[#f5f5f5] text-[14px] px-4 py-3 rounded-lg outline-none placeholder-[#52677a] transition-all focus:border-[#2481cc] focus:bg-[#0e1621]"
     />
   );
 }
@@ -226,7 +214,7 @@ function PrimaryBtn({ loading, children }) {
     <button
       type="submit"
       disabled={loading}
-      className="w-full mt-1 py-3 bg-[#00e5b0] text-black text-[12px] tracking-[0.15em] uppercase font-bold rounded-sm transition-all hover:bg-[#00ffcc] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+      className="w-full mt-2 py-3 bg-[#2481cc] text-white text-[14px] font-semibold rounded-lg transition-all hover:bg-[#2893e6] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-md"
     >
       {children}
     </button>

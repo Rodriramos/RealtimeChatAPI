@@ -1,43 +1,46 @@
-export default function RoomTabs({ activeTab, onTabChange, invitationCount, activeRoomName, connected }) {
+export default function RoomTabs({ activeTab, onTabChange, invitationCount, activeRoomName }) {
   const tabs = [
     { id: "chat",        label: activeRoomName || "Chat" },
-    { id: "rooms",       label: "Rooms" },
+    { id: "rooms",       label: "All Rooms" },
     { id: "invitations", label: "Invitations", badge: invitationCount },
-    { id: "create",      label: "+ Private Room" },
+    { id: "create",      label: "+ New Room" },
   ];
 
   return (
-    <div className="flex border-b border-[#1c2428] bg-[#0d1214] shrink-0">
+    // CAMBIO: Eliminado el bloque de estatus, las pestañas ahora fluyen directamente desde el borde izquierdo
+    <div className="flex border-b border-[#101921] bg-[#101921] shrink-0 h-13 items-stretch font-sans">
 
-      {/* STATUS */}
-      <div className="flex items-center px-4 border-r border-[#1c2428]">
-        <span className={`text-[10px] font-mono tracking-widest ${
-          connected ? "text-[#007a60]" : "text-[#334450]"
-        }`}>
-          {connected ? "● live" : "○ offline"}
-        </span>
+      {/* TABS - Estilo navegación superior limpia de Telegram */}
+      <div className="flex items-stretch flex-1 overflow-x-auto px-2">
+        {tabs.map(tab => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`flex items-center gap-2 px-5 text-[13.5px] font-medium border-b-2 transition-all cursor-pointer bg-none border-t-0 border-l-0 border-r-0
+                ${isActive
+                  ? "text-[#2481cc] border-[#2481cc]" // Azul clásico de Telegram activo
+                  : "text-[#708499] border-transparent hover:text-[#f5f5f5] hover:bg-[rgba(255,255,255,0.02)]"
+                }`}
+            >
+              <span>{tab.label}</span>
+              
+              {/* BADGE - Contador de invitaciones estilo notificación circular */}
+              {tab.badge > 0 && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4.5 text-center transition-colors ${
+                  isActive 
+                    ? "bg-[#2481cc] text-white" 
+                    : "bg-[#4cc37a] text-[#182533]"
+                }`}>
+                  {tab.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* TABS */}
-      {tabs.map(tab => (
-        <button
-          key={tab.id}
-          onClick={() => onTabChange(tab.id)}
-          className={`flex items-center gap-1.5 px-4 py-2.5 text-[10px] font-mono tracking-widest uppercase border-b-2 transition-all cursor-pointer bg-none border-t-0 border-l-0 border-r-0
-            ${activeTab === tab.id
-              ? "text-[#00d4aa] border-[#00d4aa]"
-              : "text-[#334450] border-transparent hover:text-[#6a8a98]"
-            }`}
-        >
-          {tab.label}
-          {tab.badge > 0 && (
-            <span className="bg-purple-500 text-white text-[9px] font-medium px-1.5 py-px rounded-full">
-              {tab.badge}
-            </span>
-          )}
-        </button>
-      ))}
-
     </div>
-  )
+  );
 }

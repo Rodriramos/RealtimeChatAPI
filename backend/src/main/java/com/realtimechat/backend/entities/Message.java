@@ -55,5 +55,5 @@ public class Message {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
-    public enum MessageType { TEXT, IMAGE, VIDEO, FILE }
+    public enum MessageType { TEXT, IMAGE, VIDEO, FILE, AUDIO }
 }
