@@ -8,7 +8,6 @@ export default function MessageList({ messages, loading }) {
   }, [messages]);
 
   if (loading) {
-    // CAMBIO: Spinner y fondo adaptados
     return (
       <div className="flex-1 flex items-center justify-center bg-[#0e1621]">
         <span className="text-[14px] text-[#708499] font-medium animate-pulse">
@@ -19,7 +18,6 @@ export default function MessageList({ messages, loading }) {
   }
 
   return (
-    // CAMBIO: Fondo oscuro puro de chat y scroll limpio
     <div className="flex-1 overflow-y-auto bg-[#0e1621] px-6 py-4 flex flex-col gap-3 font-sans">
 
       {messages.length === 0 && (
@@ -32,7 +30,6 @@ export default function MessageList({ messages, loading }) {
         <MessageBubble key={msg.id ?? i} msg={msg} />
       ))}
 
-      {/* Autoscroll */}
       <div ref={bottomRef} />
     </div>
   );
@@ -46,30 +43,25 @@ function MessageBubble({ msg }) {
       })
     : "";
 
-  // Lógica Telegram: Tus mensajes van a la derecha, el resto a la izquierda.
-  // Usaremos msg.isHistory de forma temporal para simular la separación (puedes cambiarlo luego por msg.senderId === user.id)
   const isMe = !msg.isHistory; 
 
   return (
-    // CAMBIO: Contenedor flexible que alinea a la izquierda o derecha
     <div className={`flex flex-col w-full animate-[fadeUp_0.15s_ease] ${isMe ? "items-end" : "items-start"}`}>
-      
-      {/* CAMBIO: Bocadillo de chat estilo Telegram */}
       <div className={`inline-block max-w-[75%] rounded-2xl px-3 py-2 relative shadow-sm overflow-hidden
         ${isMe 
-          ? "bg-[#2b5278] text-white rounded-tr-none" // Mensaje Propio (Azul Telegram Intenso)
-          : "bg-[#182533] text-[#f5f5f5] rounded-tl-none" // Mensaje Recibido (Gris Azulado)
+          ? "bg-[#2b5278] text-white rounded-tr-none"
+          : "bg-[#182533] text-[#f5f5f5] rounded-tl-none"
         }`}
       >
-        
-        {/* NOMBRE DEL REMITENTE (Solo aparece si es de otra persona) */}
+
+        {/* SENDER NAME */}
         {!isMe && (
           <p className="text-[12.5px] font-semibold text-[#5288c1] mb-1 leading-none">
             {msg.senderUsername}
           </p>
         )}
 
-        {/* CONTENIDO MULTIMEDIA: IMAGEN */}
+        {/* IMAGE */}
         {msg.messageType === "IMAGE" && msg.fileUrl && (
           <div className="-mx-3 -mt-2 mb-1">
             <img
@@ -81,7 +73,7 @@ function MessageBubble({ msg }) {
           </div>
         )}
 
-        {/* CONTENIDO MULTIMEDIA: VÍDEO */}
+        {/* VIDEO */}
         {msg.messageType === "VIDEO" && msg.fileUrl && (
           <div className="-mx-3 -mt-2 mb-1">
             <video
@@ -92,7 +84,7 @@ function MessageBubble({ msg }) {
           </div>
         )}
 
-        {/* CUERPO DEL TEXTO */}
+        {/* TEXT CONTENT */}
         {msg.content && (
           <div
             className="text-[14px] leading-relaxed wrap-break-words pr-8"
@@ -100,7 +92,7 @@ function MessageBubble({ msg }) {
           />
         )}
 
-        {/* CONTENIDO MULTIMEDIA: PDF / ARCHIVO */}
+        {/* MULTIMEDIA CONTENT: PDF / FILE */}
         {msg.messageType === "FILE" && msg.fileUrl && (
           <a
             href={msg.fileUrl}
@@ -116,7 +108,6 @@ function MessageBubble({ msg }) {
           </a>
         )}
 
-        {/* CAMBIO: Hora abajo a la derecha integrada de forma sutil */}
         <span className={`absolute bottom-1 right-2 text-[10px] select-none
           ${isMe ? "text-[#7ca2c7]" : "text-[#708499]"}`}
         >

@@ -27,7 +27,6 @@ export default function SendBar({ onSend, disabled, onTyping }) {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
-  // Cerrar el menú si haces clic fuera de él
   useEffect(() => {
     function handleClickOutside(event) {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -59,7 +58,7 @@ export default function SendBar({ onSend, disabled, onTyping }) {
     },
   });
 
-  // ── UPLOAD ────────────────────────────────────────────────────────────
+  // UPLOAD FILES (IMAGES, VIDEOS, PDFS)
   async function uploadFileBlob(blobOrFile, fileName) {
     setUploading(true);
     setShowMenu(false);
@@ -98,7 +97,7 @@ export default function SendBar({ onSend, disabled, onTyping }) {
   const removeFile = () => setFilePreview(null);
   const removeAudio = () => setAudioPreview(null);
 
-  // ── AUDIO RECORDING ───────────────────────────────────────────────────
+  // AUDIO RECORDING
   const startRecording = (e) => {
     e.preventDefault();
     if (disabled || uploading || audioPreview) return;
@@ -135,7 +134,7 @@ export default function SendBar({ onSend, disabled, onTyping }) {
     }
   };
 
-  // ── SEND ──────────────────────────────────────────────────────────────
+  // SEND MESSAGE
   const handleSend = () => {
     if (!editor) return;
     if (editor.isEmpty && !filePreview && !audioPreview) return;
@@ -162,7 +161,7 @@ export default function SendBar({ onSend, disabled, onTyping }) {
   return (
     <div className="border-t border-[#101921] bg-[#0e1621] shrink-0 px-4 py-2 font-sans flex flex-col gap-1.5 relative">
 
-      {/* PREVIEWS DE ARCHIVOS / AUDIO */}
+      {/* FILE PREVIEWS */}
       {filePreview && (
         <div className="mx-2 flex items-center gap-3 px-3 py-2 bg-[#17212b] border border-[#202b36] rounded-xl animate-[fadeUp_0.15s_ease]">
           {filePreview.resourceType === "image" ? (
@@ -188,10 +187,8 @@ export default function SendBar({ onSend, disabled, onTyping }) {
         </div>
       )}
 
-      {/* ENTRADA PRINCIPAL */}
+      {/* INPUT CONTAINER */}
       <div className="flex items-end gap-2.5 relative">
-        
-        {/* BOTÓN "+" DE ADJUNTOS (Estilo WhatsApp a la izquierda del cuadro) */}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => !disabled && setShowMenu(!showMenu)}
@@ -208,7 +205,7 @@ export default function SendBar({ onSend, disabled, onTyping }) {
             </svg>
           </button>
 
-          {/* MENÚ DE ADJUNTOS LIMPIO (Sin el audio) */}
+          {/* MENU OPTIONS */}
           {showMenu && (
             <div className="absolute bottom-13 left-0 bg-[#17212b] border border-[#202b36] rounded-2xl p-1.5 shadow-2xl flex flex-col gap-1 w-44 z-50 animate-[fadeUp_0.12s_ease]">
               <button 
@@ -227,14 +224,11 @@ export default function SendBar({ onSend, disabled, onTyping }) {
           )}
         </div>
 
-        {/* INPUTS OCULTOS */}
         <input ref={fileInputRef} type="file" accept="image/*, video/*" onChange={(e) => handleFileChange(e, "MEDIA")} className="hidden" />
         <input ref={pdfInputRef} type="file" accept="application/pdf" onChange={(e) => handleFileChange(e, "PDF")} className="hidden" />
 
-        {/* CONTENEDOR DE LA BURBUJA DEL INPUT DE TEXTO */}
+        {/* INPUT CONTAINER */}
         <div className="flex-1 bg-[#17212b] border border-[#202b36] rounded-xl flex flex-col focus-within:border-[#2b5278] transition-colors">
-          
-          {/* BARRA FORMATO INTERNA */}
           <div className="flex items-center gap-1.5 px-3 pt-2 pb-1 border-b border-[rgba(255,255,255,0.03)]">
             {FORMAT_BUTTONS.map(btn => (
               <button key={btn.label} onClick={() => editor && btn.action(editor)}
@@ -250,16 +244,14 @@ export default function SendBar({ onSend, disabled, onTyping }) {
             )}
           </div>
 
-          {/* AREA DE EDICIÓN */}
+          {/* EDITOR CONTENT */}
           <div className="px-2 py-0.5 max-h-35">
             <EditorContent editor={editor} />
           </div>
         </div>
 
-        {/* BLOQUE DE ACCIONES LATERALES (Micrófono y Send alineados a la derecha) */}
         <div className="flex items-center gap-2 mb-0.5">
-          
-          {/* BOTÓN DE GRABACIÓN DE AUDIO (Mantenido con pulsación como antes) */}
+          {/* AUDIO RECORDING BUTTON */}
           <button
             onMouseDown={startRecording}
             onMouseUp={stopRecording}
@@ -280,7 +272,7 @@ export default function SendBar({ onSend, disabled, onTyping }) {
             </svg>
           </button>
 
-          {/* BOTÓN DE ENVIAR MENSAJE */}
+          {/* SEND MESSAGE BUTTON */}
           <button
             onClick={handleSend}
             disabled={disabled || (isEmpty && !filePreview && !audioPreview)}
@@ -295,7 +287,6 @@ export default function SendBar({ onSend, disabled, onTyping }) {
         </div>
       </div>
 
-      {/* RE-ACOMODACIÓN DE MENSAJES INFORMATIVOS ABAJO */}
       <p className="px-2 text-[11px] text-[#52677a]">
         <span className="font-semibold text-[#708499]">Enter</span> para enviar · <span className="font-semibold text-[#708499]">Shift+Enter</span> línea nueva · El botón <span className="font-semibold text-[#708499]">"+"</span> permite adjuntar fotos, vídeos o documentos PDF.
       </p>

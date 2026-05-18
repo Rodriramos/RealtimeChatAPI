@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 export default function Toast({ connected, user, subscribe, addInvitation, onRoomClick }) {
   const [toasts, setToasts] = useState([]);
 
-  // CAMBIO: Declaración de removeToast para evitar errores en tiempo de ejecución
   const removeToast = (id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
@@ -27,21 +26,19 @@ export default function Toast({ connected, user, subscribe, addInvitation, onRoo
   if (!toasts.length) return null;
 
   return (
-    // CAMBIO: Posicionamiento clásico flotante con un z-index alto
     <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-100 max-w-sm font-sans">
       {toasts.map(t => (
         <div
           key={t.id}
           onClick={() => { onRoomClick(t.room); removeToast(t.id); }}
-          // CAMBIO: Estilo tarjeta flotante de Telegram Desktop (#17212b con ligera opacidad y sombras suaves)
           className="bg-[#17212b]/df border border-[#202b36] rounded-2xl px-4 py-3.5 cursor-pointer shadow-2xl animate-[fadeUp_0.2s_ease] hover:bg-[#202b36] transition-all duration-200 flex gap-3 items-start backdrop-blur-sm select-none"
         >
-          {/* ICONO/AVATAR DE LA NOTIFICACIÓN */}
+          {/* NOTIFICATION ICON */}
           <div className="w-9 h-9 rounded-full bg-[rgba(36,129,204,0.15)] text-[#2481cc] flex items-center justify-center shrink-0 text-base shadow-sm">
             📩
           </div>
 
-          {/* CUERPO DE LA NOTIFICACIÓN */}
+          {/* NOTIFICATION BODY */}
           <div className="flex flex-col gap-0.5 flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
               <span className="text-[13px] font-semibold text-[#2481cc]">

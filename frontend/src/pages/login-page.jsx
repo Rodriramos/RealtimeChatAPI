@@ -85,7 +85,7 @@ export default function LoginPage() {
         style={{ background: "radial-gradient(circle, rgba(36,129,204,0.05) 0%, transparent 70%)" }}
       />
 
-      {/* Form card */}
+      {/* MAIN CARD */}
       <div className="relative z-10 w-full max-w-105 mx-4 px-10 py-12 bg-[#182533] border border-[#202b36] rounded-xl shadow-xl animate-[cardIn_0.4s_cubic-bezier(0.16,1,0.3,1)]">
         
         <p className="font-sans text-[13px] tracking-wide text-[#2481cc] mb-8 text-center uppercase font-extrabold">

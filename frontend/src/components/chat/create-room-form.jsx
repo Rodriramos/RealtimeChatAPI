@@ -26,17 +26,16 @@ export default function CreateRoomForm({ onSubmit, onCancel }) {
   };
 
   return (
-    // CAMBIO: Fondo oscuro general del panel (#0e1621)
     <div className="flex-1 overflow-y-auto bg-[#0e1621] p-8 font-sans flex justify-center">
       <div className="w-full max-w-md flex flex-col gap-6">
         
-        {/* TÍTULO DE LA SECCIÓN AL ESTILO TELEGRAM */}
+        {/* TITLE */}
         <div>
           <h2 className="text-[16px] font-medium text-[#f5f5f5] mb-1">Create Private Room</h2>
           <p className="text-[13px] text-[#708499]">Groups can have up to multiple members invited via email.</p>
         </div>
 
-        {/* INPUT: NOMBRE DE LA SALA */}
+        {/* ROOM NAME */}
         <div className="flex flex-col gap-2">
           <label className="text-[13px] font-medium text-[#5288c1]">
             Room Name
@@ -50,7 +49,7 @@ export default function CreateRoomForm({ onSubmit, onCancel }) {
           />
         </div>
 
-        {/* TEXTAREA: EMAILS */}
+        {/* EMAILS */}
         <div className="flex flex-col gap-2">
           <label className="text-[13px] font-medium text-[#5288c1] flex items-center justify-between">
             <span>Guest Emails</span>
@@ -65,7 +64,7 @@ export default function CreateRoomForm({ onSubmit, onCancel }) {
           />
         </div>
 
-        {/* BOTÓN DE ACCIÓN */}
+        {/* ACTIONS */}
         <button
           onClick={handleSubmit}
           disabled={loading || !name.trim()}
@@ -74,7 +73,7 @@ export default function CreateRoomForm({ onSubmit, onCancel }) {
           {loading ? "Creating room..." : "Create Room"}
         </button>
 
-        {/* CAJAS DE FEEDBACK (Éxito / Error) */}
+        {/* ERROR MESSAGE */}
         {result && (
           <div className={`px-4 py-3 rounded-xl border text-[13.5px] font-medium transition-all animate-[fadeUp_0.15s_ease] ${
             result.ok

@@ -18,15 +18,13 @@ export default function Sidebar({
   };
 
   return (
-    // CAMBIO: Fondo Telegram Desktop (#182533), sin bordes toscos y tipografía limpia (font-sans)
     <div className="w-64 min-w-64 bg-[#182533] border-r border-[#101921] flex flex-col overflow-hidden font-sans">
 
-      {/* HEADER - Estilo barra de búsqueda/cabecera superior de Telegram */}
+      {/* HEADER */}
       <div className="flex items-center justify-between p-4 border-b border-[#101921]">
         <span className="text-[14px] font-semibold text-[#f5f5f5] tracking-wide">
           Real Time <span className="text-[#2481cc] font-bold text-[12px]">Chat</span>
         </span>
-        {/* Indicador de conexión sutil */}
         <div className="flex items-center gap-1.5">
           <span className="text-[11px] text-[#7b92ab]">
             {connected ? "online" : "connecting..."}
@@ -37,7 +35,7 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* SECCIONES DE SALAS (Scrollable general igual que Telegram) */}
+      {/* ROOM SECTION */}
       <div className="flex-1 overflow-y-auto py-2 space-y-4">
         
         {/* GLOBAL */}
@@ -80,7 +78,6 @@ export default function Sidebar({
               Direct Messages
             </p>
             {invitationCount > 0 && (
-              // CAMBIO: Globo de notificación estilo Telegram (Verde/Aqua brillante redondeado)
               <span className="ml-auto bg-[#4cc37a] text-[#182533] text-[11px] font-bold px-2 py-0.5 rounded-full">
                 {invitationCount}
               </span>
@@ -102,10 +99,9 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* FOOTER - Perfil de usuario limpio al fondo */}
+      {/* FOOTER */}
       <div className="mt-auto p-3 bg-[#111923] border-t border-[#101921] flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          {/* Avatar circular con el color acento */}
           <div className="w-8 h-8 rounded-full bg-[#2481cc] flex items-center justify-center text-[13px] text-white font-semibold shrink-0 shadow-sm">
             {user?.username?.[0]?.toUpperCase() ?? "?"}
           </div>
@@ -118,8 +114,8 @@ export default function Sidebar({
             </span>
           </div>
         </div>
-        
-        {/* Botón Logout discreto e integrado */}
+
+        {/* LOGOUT BUTTON */}
         <button
           onClick={handleLogout}
           className="text-[12px] text-[#7b92ab] hover:text-[#ef476f] p-2 rounded-lg hover:bg-[#1c242c] transition-colors cursor-pointer shrink-0"
@@ -133,20 +129,17 @@ export default function Sidebar({
   );
 }
 
-// ── COMPONENTE ITEM DE SALA ESTILO TELEGRAM ──────────────────────────────────
-
 function RoomItem({ room, active, type, onClick }) {
-  // Generamos un icono visual o color de avatar según el tipo de sala
   const getAvatarStyles = () => {
     if (type === "GLOBAL") return "bg-[#2b5278] text-[#4cc37a]";
     if (type === "PRIVATE") return "bg-[#344252] text-[#e39e3b]";
-    return "bg-[#2f4356] text-[#2893e6]"; // Thematic
+    return "bg-[#2f4356] text-[#2893e6]";
   };
 
   const getIcon = () => {
     if (type === "GLOBAL") return "🌐";
     if (type === "PRIVATE") return "👤";
-    return "📣"; // Estilo canal de difusión
+    return "📣";
   };
 
   return (
@@ -154,18 +147,16 @@ function RoomItem({ room, active, type, onClick }) {
       onClick={() => onClick(room)}
       className={`flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg cursor-pointer transition-all select-none
         ${active
-          ? "bg-[#2481cc] text-white" // Selección azul sólida clásica de Telegram
+          ? "bg-[#2481cc] text-white"
           : "text-[#f5f5f5] hover:bg-[#202b36]"
         }`}
     >
-      {/* Mini Avatar simulado para la sala */}
       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[12px] shrink-0 font-sans
         ${active ? "bg-[rgba(255,255,255,0.15)] text-white" : getAvatarStyles()}`}
       >
         {getIcon()}
       </div>
 
-      {/* Nombre del chat */}
       <div className="flex-1 min-w-0">
         <p className={`text-[13.5px] truncate ${active ? "font-medium" : "text-[#f5f5f5]"}`}>
           {room.name}
