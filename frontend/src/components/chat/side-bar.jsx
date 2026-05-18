@@ -24,15 +24,15 @@ export default function Sidebar({
       {/* HEADER - Estilo barra de búsqueda/cabecera superior de Telegram */}
       <div className="flex items-center justify-between p-4 border-b border-[#101921]">
         <span className="text-[14px] font-semibold text-[#f5f5f5] tracking-wide">
-          Telegram <span className="text-[#2481cc] font-normal text-[12px]">Chat</span>
+          Real Time <span className="text-[#2481cc] font-bold text-[12px]">Chat</span>
         </span>
         {/* Indicador de conexión sutil */}
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-[#708499]">
+          <span className="text-[11px] text-[#7b92ab]">
             {connected ? "online" : "connecting..."}
           </span>
           <div className={`w-2 h-2 rounded-full transition-all ${
-            connected ? "bg-[#4cc37a]" : "bg-[#ef476f] animate-pulse"
+            connected ? "bg-[#2481cc]" : "bg-[#ef476f] animate-pulse"
           }`} />
         </div>
       </div>
@@ -42,7 +42,7 @@ export default function Sidebar({
         
         {/* GLOBAL */}
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#708499] px-4 pb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#7b92ab] px-4 pb-1">
             Global
           </p>
           <RoomItem
@@ -55,7 +55,7 @@ export default function Sidebar({
 
         {/* THEMATIC */}
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#708499] px-4 pb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#7b92ab] px-4 pb-1">
             Thematic Channels
           </p>
           {thematicRooms.length === 0 ? (
@@ -76,7 +76,7 @@ export default function Sidebar({
         {/* PRIVATES */}
         <div>
           <div className="flex items-center px-4 pb-1">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#708499]">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#7b92ab]">
               Direct Messages
             </p>
             {invitationCount > 0 && (
@@ -113,7 +113,7 @@ export default function Sidebar({
             <span className="text-[13px] font-medium text-[#f5f5f5] truncate">
               {user?.username ?? "Anonymous"}
             </span>
-            <span className="text-[11px] text-[#708499] truncate">
+            <span className="text-[11px] text-[#7b92ab] truncate">
               {user?.email ?? "Session active"}
             </span>
           </div>
@@ -122,7 +122,7 @@ export default function Sidebar({
         {/* Botón Logout discreto e integrado */}
         <button
           onClick={handleLogout}
-          className="text-[12px] text-[#708499] hover:text-[#ef476f] p-2 rounded-lg hover:bg-[#1c242c] transition-colors cursor-pointer shrink-0"
+          className="text-[12px] text-[#7b92ab] hover:text-[#ef476f] p-2 rounded-lg hover:bg-[#1c242c] transition-colors cursor-pointer shrink-0"
           title="Logout"
         >
           Log Out

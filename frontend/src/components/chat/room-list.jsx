@@ -1,75 +1,138 @@
-export default function RoomList({ thematicRooms, privateRooms, onEnter }) {
+import { useState } from "react";
+
+export default function RoomList({ thematicRooms = [], privateRooms = [], onEnter }) {
   const globalRoom = { id: 1, name: "Global Room", type: "GLOBAL" };
+  const [activeRoomId, setActiveRoomId] = useState(1); // Controla qué sala está seleccionada
+
+  const handleRoomClick = (room) => {
+    setActiveRoomId(room.id);
+    onEnter?.(room);
+  };
 
   return (
-    // CAMBIO: Fondo oscuro oficial de chat (#0e1621)
-    <div className="flex-1 overflow-y-auto bg-[#0e1621] font-sans">
+    <div className="flex-1 overflow-y-auto bg-[#0e1621] font-sans scrollbar-thin scrollbar-thumb-[#17212b]">
 
       {/* CABECERA DE LA LISTA */}
-      <div className="flex items-center px-6 py-3.5 border-b border-[#101921] bg-[#17212b]">
-        <span className="text-[13px] text-[#5288c1] font-medium tracking-wide">
-          Available Rooms & Channels
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[#101921] bg-[#17212b]/80 backdrop-blur-md sticky top-0 z-10">
+        <span className="text-[13px] text-[#5288c1] font-semibold tracking-wider uppercase">
+          Salas y Canales
+        </span>
+        <span className="text-[11px] bg-[#202b36] text-[#708499] px-2 py-0.5 rounded-md font-medium">
+          {1 + thematicRooms.length + privateRooms.length} activas
         </span>
       </div>
 
-      {/* LISTA DE SALAS ESTILO TELEGRAM (Filas compactas e interactivas) */}
-      <div className="flex flex-col divide-y divide-[#101921]">
-        <RoomRow room={globalRoom} onEnter={onEnter} />
-        {thematicRooms.map(r => <RoomRow key={r.id} room={r} onEnter={onEnter} />)}
-        {privateRooms.map(r => <RoomRow key={r.id} room={r} onEnter={onEnter} />)}
+      {/* LISTA DE SALAS ESTILO TELEGRAM PREMIUM */}
+      <div className="flex flex-col py-1">
+        <RoomRow 
+          room={globalRoom} 
+          isActive={activeRoomId === globalRoom.id} 
+          onClick={() => handleRoomClick(globalRoom)} 
+        />
+        
+        {thematicRooms.map(r => (
+          <RoomRow 
+            key={r.id} 
+            room={r} 
+            isActive={activeRoomId === r.id} 
+            onClick={() => handleRoomClick(r)} 
+          />
+        ))}
+        
+        {privateRooms.map(r => (
+          <RoomRow 
+            key={r.id} 
+            room={r} 
+            isActive={activeRoomId === r.id} 
+            onClick={() => handleRoomClick(r)} 
+          />
+        ))}
       </div>
 
     </div>
   );
 }
 
-// Configuración de estilos para los Avatares/Badges basados en Telegram Modos
+// Configuración visual avanzada para los Avatares
 const ROOM_META = {
-  GLOBAL: { label: "Global", icon: "🌐", bg: "bg-[#2481cc] text-white" },
-  THEMATIC: { label: "Thematic", icon: "💬", bg: "bg-[#2b5278] text-[#80b1ea]" },
-  PRIVATE: { label: "Private", icon: "🔒", bg: "bg-[#2f1f3a] text-purple-400" },
+  GLOBAL: { label: "Global", icon: "🌐", bg: "from-[#2a7abe] to-[#2481cc] text-white" },
+  THEMATIC: { label: "Temática", icon: "💬", bg: "from-[#2b5278] to-[#366391] text-[#b3d4fc]" },
+  PRIVATE: { label: "Privada", icon: "🔒", bg: "from-[#2f1f3a] to-[#44285a] text-[#d8b4fe]" },
 };
 
-function RoomRow({ room, onEnter }) {
-  const meta = ROOM_META[room.type] ?? { label: "Room", icon: "👥", bg: "bg-[#1d2a39] text-[#708499]" };
+function RoomRow({ room, isActive, onClick }) {
+  const meta = ROOM_META[room.type] ?? { label: "Sala", icon: "👥", bg: "from-[#1d2a39] to-[#253548] text-[#708499]" };
+
+  // Extrae las dos primeras letras para un diseño de avatar más realista
+  const getInitials = (name) => {
+    return name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : "RM";
+  };
 
   return (
-    // CAMBIO: Toda la fila es un botón interactivo, sin bordes de tarjeta individuales
     <div 
-      onClick={() => onEnter(room)}
-      className="flex items-center justify-between px-6 py-3.5 hover:bg-[#17212b] transition-colors cursor-pointer group"
+      onClick={onClick}
+      className={`flex items-center justify-between mx-2 my-0.5 px-4 py-3 rounded-xl transition-all duration-150 cursor-pointer group relative ${
+        isActive 
+          ? "bg-[#2481cc] shadow-md shadow-[#2481cc]/10" 
+          : "hover:bg-[#17212b] active:bg-[#131b24]"
+      }`}
     >
+      {/* Indicador de Línea Activa en el borde izquierdo */}
+      {isActive && (
+        <div className="absolute left-0 top-1/4 h-1/2 w-1 bg-white rounded-r-full animate-[fadeIn_0.2s_ease]" />
+      )}
+
       <div className="flex items-center gap-3.5 min-w-0">
         
-        {/* AVATAR ESTILO TELEGRAM (Círculo con icono/inicial) */}
-        <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-lg font-medium shadow-sm ${meta.bg}`}>
-          {meta.icon}
+        {/* AVATAR PREMIUM CON DEGRADADO */}
+        <div className={`w-11 h-11 rounded-full bg-linear-to-tr flex items-center justify-center shrink-0 shadow-inner relative font-semibold text-[14px] tracking-wider select-none ${
+          isActive ? "bg-white/10 text-white border border-white/20" : meta.bg
+        }`}>
+          {/* Mostramos las iniciales; si es global dejamos el emoji flotando */}
+          {room.type === 'GLOBAL' ? meta.icon : getInitials(room.name)}
+          
+          {/* Pequeño indicador de estado online/activo en la esquina del avatar */}
+          <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#0e1621] ${
+            room.type === 'GLOBAL' ? 'bg-green-400' : 'bg-amber-400'
+          }`} />
         </div>
 
         {/* INFORMACIÓN DE LA SALA */}
         <div className="flex flex-col gap-0.5 min-w-0">
-          <span className="text-[14.5px] text-[#f5f5f5] font-medium group-hover:text-[#2481cc] transition-colors truncate">
+          <span className={`text-[14.5px] font-medium transition-colors truncate ${
+            isActive ? "text-white" : "text-[#f5f5f5] group-hover:text-[#2481cc]"
+          }`}>
             {room.name}
           </span>
-          <span className="text-[12.5px] text-[#708499] font-normal">
-            Click to join conversation
+          <span className={`text-[12.5px] font-normal transition-colors truncate ${
+            isActive ? "text-white/75" : "text-[#708499]"
+          }`}>
+            {room.type === 'GLOBAL' ? 'Chat general abierto' : `Unirse a sala ${meta.label.toLowerCase()}`}
           </span>
         </div>
       </div>
 
-      {/* DETALLES/BADGE DE TIPO DE SALA */}
-      <div className="flex items-center gap-3">
-        <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full ${
-          room.type === 'GLOBAL' ? 'bg-[rgba(36,129,204,0.15)] text-[#2481cc]' :
-          room.type === 'THEMATIC' ? 'bg-[rgba(82,136,193,0.15)] text-[#5288c1]' :
-          'bg-[rgba(168,85,247,0.15)] text-purple-400'
-        }`}>
-          {meta.label}
-        </span>
+      {/* SECCIÓN DERECHA: BADGES Y CONTADORES */}
+      <div className="flex items-center gap-2.5 shrink-0">
         
-        {/* Icono flecha sutil indicador de acción */}
-        <span className="text-[#52677a] group-hover:text-[#f5f5f5] transition-colors text-sm pr-1">
-          ➔
+        {/* Badge tipo de sala (Solo visible si no está activa para no saturar) */}
+        {!isActive && (
+          <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+            room.type === 'GLOBAL' ? 'bg-[rgba(36,129,204,0.12)] text-[#2481cc]' :
+            room.type === 'THEMATIC' ? 'bg-[rgba(82,136,193,0.12)] text-[#5288c1]' :
+            'bg-[rgba(168,85,247,0.12)] text-purple-400'
+          }`}>
+            {meta.label}
+          </span>
+        )}
+
+        {/* CONTADOR DE MENSAJES (Estilo Telegram Badge) */}
+        <span className={`text-[11px] font-bold min-w-5 h-5 px-1.5 rounded-full flex items-center justify-center transition-all ${
+          isActive 
+            ? "bg-white text-[#2481cc]" 
+            : "bg-[#2481cc] text-white opacity-90 group-hover:opacity-100 shadow-[0_2px_5px_rgba(36,129,204,0.2)]"
+        }`}>
+          {room.type === 'GLOBAL' ? '99+' : room.id * 2}
         </span>
       </div>
     </div>

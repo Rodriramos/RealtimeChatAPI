@@ -1,6 +1,6 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useAuth } from "../../hooks/use-auth";
 
 const API = "http://localhost:8080";
@@ -19,16 +19,29 @@ export default function SendBar({ onSend, disabled, onTyping }) {
   const [filePreview, setFilePreview] = useState(null);
   const [recording, setRecording] = useState(false);
   const [audioPreview, setAudioPreview] = useState(null);
+  const [showMenu, setShowMenu] = useState(false);
 
   const fileInputRef = useRef(null);
+  const pdfInputRef = useRef(null);
+  const menuRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+
+  // Cerrar el menú si haces clic fuera de él
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const editor = useEditor({
     extensions: [StarterKit],
     editorProps: {
       attributes: {
-        // CAMBIO: Estilos adaptados al input burbuja de Telegram
         class: "outline-none min-h-[22px] max-h-[140px] overflow-y-auto text-[14px] font-sans text-[#f5f5f5] px-1 py-1.5 placeholder-[#52677a]",
       },
       handleKeyDown(view, event) {
@@ -49,6 +62,7 @@ export default function SendBar({ onSend, disabled, onTyping }) {
   // ── UPLOAD ────────────────────────────────────────────────────────────
   async function uploadFileBlob(blobOrFile, fileName) {
     setUploading(true);
+    setShowMenu(false);
     try {
       const formData = new FormData();
       formData.append("file", blobOrFile, fileName);
@@ -63,17 +77,9 @@ export default function SendBar({ onSend, disabled, onTyping }) {
       const data = await res.json();
 
       if (data.messageType === "AUDIO" || fileName.endsWith(".webm") || fileName.endsWith(".mp3")) {
-        setAudioPreview({
-          url: data.url,
-          name: fileName,
-          resourceType: "AUDIO",
-        });
+        setAudioPreview({ url: data.url, name: fileName, resourceType: "AUDIO" });
       } else {
-        setFilePreview({
-          url: data.url,
-          name: fileName,
-          resourceType: data.messageType,
-        });
+        setFilePreview({ url: data.url, name: fileName, resourceType: data.messageType });
       }
     } catch (err) {
       console.error("Upload error:", err);
@@ -82,7 +88,7 @@ export default function SendBar({ onSend, disabled, onTyping }) {
     }
   }
   
-  const handleFileChange = async (e) => {
+  const handleFileChange = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
     await uploadFileBlob(file, file.name);
@@ -93,33 +99,32 @@ export default function SendBar({ onSend, disabled, onTyping }) {
   const removeAudio = () => setAudioPreview(null);
 
   // ── AUDIO RECORDING ───────────────────────────────────────────────────
-  const startRecording = async (e) => {
+  const startRecording = (e) => {
     e.preventDefault();
     if (disabled || uploading || audioPreview) return;
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      audioChunksRef.current = [];
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        audioChunksRef.current = [];
 
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
+        mediaRecorderRef.current.ondataavailable = (event) => {
+          if (event.data.size > 0) audioChunksRef.current.push(event.data);
+        };
 
-      mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        const fileName = `audio_${Date.now()}.webm`;
-        stream.getTracks().forEach(track => track.stop());
-        await uploadFileBlob(audioBlob, fileName);
-      };
+        mediaRecorderRef.current.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+          const fileName = `audio_${Date.now()}.webm`;
+          stream.getTracks().forEach(track => track.stop());
+          await uploadFileBlob(audioBlob, fileName);
+        };
 
-      mediaRecorderRef.current.start();
-      setRecording(true);
-    } catch (err) {
-      console.error("Error al acceder al micrófono:", err);
-    }
+        mediaRecorderRef.current.start();
+        setRecording(true);
+      })
+      .catch(err => {
+        console.error("Error al acceder al micrófono:", err);
+      });
   };
 
   const stopRecording = (e) => {
@@ -144,20 +149,10 @@ export default function SendBar({ onSend, disabled, onTyping }) {
       });
       setFilePreview(null);
     } else if (audioPreview) {
-      onSend({
-        content: "",
-        messageType: "AUDIO",
-        fileUrl: audioPreview.url,
-        fileName: audioPreview.name,
-      });
+      onSend({ content: "", messageType: "AUDIO", fileUrl: audioPreview.url, fileName: audioPreview.name });
       setAudioPreview(null);
     } else {
-      onSend({
-        content: editor.getHTML(),
-        messageType: "TEXT",
-        fileUrl: null,
-        fileName: null,
-      });
+      onSend({ content: editor.getHTML(), messageType: "TEXT", fileUrl: null, fileName: null });
     }
 
     editor.commands.clearContent();
@@ -165,10 +160,9 @@ export default function SendBar({ onSend, disabled, onTyping }) {
   };
 
   return (
-    // CAMBIO: Fondo integrado al chat (#0e1621), sin borde tosco superior sino división sutil
-    <div className="border-t border-[#101921] bg-[#0e1621] shrink-0 px-4 py-2 font-sans flex flex-col gap-1.5">
+    <div className="border-t border-[#101921] bg-[#0e1621] shrink-0 px-4 py-2 font-sans flex flex-col gap-1.5 relative">
 
-      {/* PREVIEW DE IMAGEN O VÍDEO (Estilo adjunto elegante flotante) */}
+      {/* PREVIEWS DE ARCHIVOS / AUDIO */}
       {filePreview && (
         <div className="mx-2 flex items-center gap-3 px-3 py-2 bg-[#17212b] border border-[#202b36] rounded-xl animate-[fadeUp_0.15s_ease]">
           {filePreview.resourceType === "image" ? (
@@ -180,99 +174,130 @@ export default function SendBar({ onSend, disabled, onTyping }) {
             <span className="text-[13px] text-[#f5f5f5] font-medium truncate">{filePreview.name}</span>
             <span className="text-[11px] text-[#708499] uppercase tracking-wide">{filePreview.resourceType}</span>
           </div>
-          <button onClick={removeFile} className="text-[#708499] hover:text-[#ef476f] transition-colors text-xl p-1 cursor-pointer">
-            ×
-          </button>
+          <button onClick={removeFile} className="text-[#708499] hover:text-[#ef476f] transition-colors text-xl p-1 cursor-pointer">×</button>
         </div>
       )}
 
-      {/* PREVIEW DEL AUDIO */}
       {audioPreview && (
         <div className="mx-2 flex items-center gap-3 px-3 py-2 bg-[#17212b] border border-[#202b36] rounded-xl animate-[fadeUp_0.15s_ease]">
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#2481cc] text-white text-[12px]">
-            🎤
-          </div>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#2481cc] text-white text-[12px]">🎤</div>
           <div className="flex-1 min-w-0 flex items-center">
             <audio src={audioPreview.url} controls className="w-full h-8 custom-audio" />
           </div>
-          <button onClick={removeAudio} className="text-[#708499] hover:text-[#ef476f] transition-colors text-xl p-1 cursor-pointer">
-            ×
-          </button>
+          <button onClick={removeAudio} className="text-[#708499] hover:text-[#ef476f] transition-colors text-xl p-1 cursor-pointer">×</button>
         </div>
       )}
 
-      {/* FILA DE ENTRADA PRINCIPAL + BOTONES */}
-      <div className="flex items-end gap-2.5">
+      {/* ENTRADA PRINCIPAL */}
+      <div className="flex items-end gap-2.5 relative">
         
-        {/* CONTENEDOR DE ENTRADA GLOBAL (Burbuja Unificada de Telegram Desktop) */}
+        {/* BOTÓN "+" DE ADJUNTOS (Estilo WhatsApp a la izquierda del cuadro) */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => !disabled && setShowMenu(!showMenu)}
+            disabled={disabled || uploading || recording}
+            title="Adjuntar contenido"
+            className={`w-10.5 h-10.5 shrink-0 rounded-full flex items-center justify-center transition-all duration-150 shadow-md mb-0.5 cursor-pointer ${
+              showMenu 
+                ? "bg-[#2b5278] text-white rotate-45" 
+                : "bg-[#17212b] hover:bg-[#202b36] border border-[#202b36] text-[#708499] hover:text-[#f5f5f5]"
+            }`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+
+          {/* MENÚ DE ADJUNTOS LIMPIO (Sin el audio) */}
+          {showMenu && (
+            <div className="absolute bottom-13 left-0 bg-[#17212b] border border-[#202b36] rounded-2xl p-1.5 shadow-2xl flex flex-col gap-1 w-44 z-50 animate-[fadeUp_0.12s_ease]">
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-3 px-3 py-2 text-[13.5px] text-[#f5f5f5] hover:bg-[#202b36] rounded-xl transition-colors text-left cursor-pointer"
+              >
+                <span className="text-base">🖼️</span> Fotos y Vídeos
+              </button>
+              <button 
+                onClick={() => pdfInputRef.current?.click()}
+                className="flex items-center gap-3 px-3 py-2 text-[13.5px] text-[#f5f5f5] hover:bg-[#202b36] rounded-xl transition-colors text-left cursor-pointer"
+              >
+                <span className="text-base">📄</span> Documento (PDF)
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* INPUTS OCULTOS */}
+        <input ref={fileInputRef} type="file" accept="image/*, video/*" onChange={(e) => handleFileChange(e, "MEDIA")} className="hidden" />
+        <input ref={pdfInputRef} type="file" accept="application/pdf" onChange={(e) => handleFileChange(e, "PDF")} className="hidden" />
+
+        {/* CONTENEDOR DE LA BURBUJA DEL INPUT DE TEXTO */}
         <div className="flex-1 bg-[#17212b] border border-[#202b36] rounded-xl flex flex-col focus-within:border-[#2b5278] transition-colors">
           
-          {/* BARRA DE HERRAMIENTAS INTERNA */}
+          {/* BARRA FORMATO INTERNA */}
           <div className="flex items-center gap-1.5 px-3 pt-2 pb-1 border-b border-[rgba(255,255,255,0.03)]">
             {FORMAT_BUTTONS.map(btn => (
               <button key={btn.label} onClick={() => editor && btn.action(editor)}
                 title={btn.title} disabled={disabled || !editor}
                 className={`px-2 py-0.5 text-[12px] font-medium rounded transition-all disabled:opacity-30 cursor-pointer ${btn.style}
-                  ${editor && btn.active(editor)
-                    ? "text-[#2481cc] bg-[rgba(36,129,204,0.12)]"
-                    : "text-[#708499] hover:text-[#f5f5f5]"
-                  }`}>
+                  ${editor && btn.active(editor) ? "text-[#2481cc] bg-[rgba(36,129,204,0.12)]" : "text-[#708499] hover:text-[#f5f5f5]"}`}>
                 {btn.label}
               </button>
             ))}
-
-            <div className="w-px h-3 bg-[#202b36] mx-1" />
-
-            {/* Adjuntar Archivo */}
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={disabled || uploading}
-              title="Adjuntar archivo o imagen"
-              className="p-1 text-[#708499] hover:text-[#2481cc] transition-all disabled:opacity-30 cursor-pointer text-[13px]"
-            >
-              {uploading && !recording ? "⏳" : "📎"}
-            </button>
-            <input ref={fileInputRef} type="file" accept="image/*, video/*, application/pdf" onChange={handleFileChange} className="hidden" />
-
-            {/* Micrófono Nota de Voz */}
-            <button
-              onMouseDown={startRecording} onMouseUp={stopRecording} onMouseLeave={stopRecording}
-              onTouchStart={startRecording} onTouchEnd={stopRecording}
-              disabled={disabled || uploading || !!audioPreview}
-              title="Mantén pulsado para grabar"
-              className={`px-2 py-0.5 text-[12px] font-medium rounded transition-all select-none touch-none cursor-pointer
-                ${recording 
-                  ? "text-[#ef476f] bg-[rgba(239,71,111,0.15)] animate-pulse" 
-                  : "text-[#708499] hover:text-[#2481cc] disabled:opacity-30"
-                }`}
-            >
-              {recording ? "🎙️ Recording..." : "🎙️ Voice"}
-            </button>
+            
+            {uploading && (
+              <div className="ml-auto text-[12px] text-[#5288c1]">⏳ Subiendo archivo...</div>
+            )}
           </div>
 
-          {/* AREA DE TEXTO */}
+          {/* AREA DE EDICIÓN */}
           <div className="px-2 py-0.5 max-h-35">
             <EditorContent editor={editor} />
           </div>
         </div>
 
-        {/* BOTÓN DE ENVIAR (Icono redondo estilo Telegram) */}
-        <button
-          onClick={handleSend}
-          disabled={disabled || (isEmpty && !filePreview && !audioPreview)}
-          className="w-10.5 h-10.5 shrink-0 rounded-full bg-[#2481cc] hover:bg-[#2893e6] disabled:bg-[#202b36] disabled:text-[#52677a] text-white flex items-center justify-center transition-all active:scale-95 disabled:cursor-not-allowed cursor-pointer shadow-md mb-0.5"
-          title="Enviar mensaje"
-        >
-          {/* SVG de flecha/avión de papel clásico de mensajería */}
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="translate-x-px">
-            <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+        {/* BLOQUE DE ACCIONES LATERALES (Micrófono y Send alineados a la derecha) */}
+        <div className="flex items-center gap-2 mb-0.5">
+          
+          {/* BOTÓN DE GRABACIÓN DE AUDIO (Mantenido con pulsación como antes) */}
+          <button
+            onMouseDown={startRecording}
+            onMouseUp={stopRecording}
+            onMouseLeave={stopRecording}
+            onTouchStart={startRecording}
+            onTouchEnd={stopRecording}
+            disabled={disabled || uploading || !!audioPreview}
+            title="Mantén presionado para grabar audio"
+            className={`w-10.5 h-10.5 shrink-0 rounded-full flex items-center justify-center transition-all duration-150 active:scale-95 shadow-md select-none touch-none cursor-pointer ${
+              recording 
+                ? "bg-[#ef476f] text-white animate-pulse shadow-[0_0_12px_rgba(239,71,111,0.4)]" 
+                : "bg-[#ffffff] hover:bg-[#f0f0f0] text-[#2481cc] disabled:bg-[#202b36] disabled:text-[#52677a] disabled:cursor-not-allowed"
+            }`}
+          >
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 1C10.3431 1 9 2.34315 9 4V12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12V4C15 2.34315 13.6569 1 12 1Z" fill="currentColor"/>
+              <path d="M19 10V12C19 15.5422 16.359 18.4657 13 18.9381V21H16C16.5523 21 17 21.4477 17 22C17 22.5523 16.5523 23 16 23H8C7.44772 23 7 22.5523 7 22C7 21.4477 7.44772 21H10V18.9381C6.64104 18.4657 4 15.5422 4 12V10C4 9.44772 4.44772 9 5 9C5.55228 9 6 9.44772 6 10V12C6 15.3137 8.68629 18 12 18C15.3137 18 18 15.3137 18 12V10C18 9.44772 18.4477 9 19 9C19.5523 9 24 9.44772 24 10Z" fill="currentColor"/>
+            </svg>
+          </button>
+
+          {/* BOTÓN DE ENVIAR MENSAJE */}
+          <button
+            onClick={handleSend}
+            disabled={disabled || (isEmpty && !filePreview && !audioPreview)}
+            className="pr-0.5 w-10.5 h-10.5 shrink-0 rounded-full bg-[#2481cc] hover:bg-[#2893e6] disabled:bg-[#202b36] disabled:text-[#52677a] text-white flex items-center justify-center transition-all active:scale-95 disabled:cursor-not-allowed cursor-pointer shadow-md"
+            title="Enviar mensaje"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="translate-x-px">
+              <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+
+        </div>
       </div>
 
-      {/* ATAJOS INFORMATIVOS ABAJO */}
-      <p className="px-2 text-[11px] text-[#52677a] font-normal tracking-wide">
-        <span className="font-semibold text-[#708499]">Enter</span> to send · <span className="font-semibold text-[#708499]">Shift+Enter</span> for new line · Hold <span className="font-semibold text-[#708499]">Voice</span> to record
+      {/* RE-ACOMODACIÓN DE MENSAJES INFORMATIVOS ABAJO */}
+      <p className="px-2 text-[11px] text-[#52677a]">
+        <span className="font-semibold text-[#708499]">Enter</span> para enviar · <span className="font-semibold text-[#708499]">Shift+Enter</span> línea nueva · El botón <span className="font-semibold text-[#708499]">"+"</span> permite adjuntar fotos, vídeos o documentos PDF.
       </p>
     </div>
   );
