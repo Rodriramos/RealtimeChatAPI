@@ -66,7 +66,7 @@ export default function SendBar({ onSend, disabled, onTyping }) {
       const formData = new FormData();
       formData.append("file", blobOrFile, fileName);
       
-      const res = await fetch(`${API}/api/upload`, {
+      const res = await fetch(`${API}/api/files/upload`, {
         method: "POST",
         headers: { Authorization: "Bearer " + token },
         body: formData,

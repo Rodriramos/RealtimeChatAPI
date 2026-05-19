@@ -93,7 +93,7 @@ function MessageBubble({ msg }) {
         {msg.messageType === "FILE" && msg.fileUrl && (
           <div
             onClick={() => {
-              const proxyUrl = `http://localhost:8080/api/download?url=${encodeURIComponent(msg.fileUrl)}&fileName=${encodeURIComponent(msg.fileName || "documento.pdf")}`;
+              const proxyUrl = `http://localhost:8080/api/files/download?url=${encodeURIComponent(msg.fileUrl)}&fileName=${encodeURIComponent(msg.fileName || "documento.pdf")}`;
               const a = document.createElement("a");
               a.href = proxyUrl;
               a.download = msg.fileName || "documento.pdf";
