@@ -36,19 +36,20 @@ export default function MessageList({ messages, loading }) {
 }
 
 function MessageBubble({ msg }) {
+  console.log("msg:", msg.messageType, msg.fileUrl, msg.fileName);
   const time = msg.sentAt || msg.createdAt
     ? new Date(msg.sentAt ?? msg.createdAt).toLocaleTimeString("es-ES", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+    })
     : "";
 
-  const isMe = !msg.isHistory; 
+  const isMe = !msg.isHistory;
 
   return (
     <div className={`flex flex-col w-full animate-[fadeUp_0.15s_ease] ${isMe ? "items-end" : "items-start"}`}>
       <div className={`inline-block max-w-[75%] rounded-2xl px-3 py-2 relative shadow-sm overflow-hidden
-        ${isMe 
+        ${isMe
           ? "bg-[#2b5278] text-white rounded-tr-none"
           : "bg-[#182533] text-[#f5f5f5] rounded-tl-none"
         }`}
@@ -76,36 +77,59 @@ function MessageBubble({ msg }) {
         {/* VIDEO */}
         {msg.messageType === "VIDEO" && msg.fileUrl && (
           <div className="-mx-3 -mt-2 mb-1">
-            <video
-              src={msg.fileUrl}
-              controls
-              className="max-w-xs max-h-64 rounded-t-xl"
-            />
+            <video src={msg.fileUrl} controls className="max-w-xs max-h-64 rounded-t-xl" />
           </div>
         )}
 
-        {/* TEXT CONTENT */}
+        {/* AUDIO */}
+        {msg.messageType === "AUDIO" && msg.fileUrl && (
+          <div className="flex items-center gap-2 my-1 py-1">
+            <span className="text-lg">🎤</span>
+            <audio src={msg.fileUrl} controls className="h-8 w-52" />
+          </div>
+        )}
+
+        {/* PDF / FILE */}
+        {msg.messageType === "FILE" && msg.fileUrl && (
+          <div
+            onClick={() => {
+              const proxyUrl = `http://localhost:8080/api/download?url=${encodeURIComponent(msg.fileUrl)}&fileName=${encodeURIComponent(msg.fileName || "documento.pdf")}`;
+              const a = document.createElement("a");
+              a.href = proxyUrl;
+              a.download = msg.fileName || "documento.pdf";
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }}
+            className={`flex items-center gap-3 my-1 p-3 rounded-xl transition-colors cursor-pointer
+      ${isMe
+                ? "bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.13)]"
+                : "bg-[rgba(0,0,0,0.2)] hover:bg-[rgba(0,0,0,0.28)]"
+              }`}
+          >
+            <div className="w-11 h-11 rounded-xl bg-[#ef476f] flex flex-col items-center justify-center shrink-0 shadow-sm">
+              <span className="text-white text-[10px] font-black tracking-wide leading-none">PDF</span>
+              <div className="w-5 h-px bg-[rgba(255,255,255,0.4)] my-0.5" />
+              <span className="text-[rgba(255,255,255,0.7)] text-[8px]">DOC</span>
+            </div>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className={`text-[13px] font-semibold truncate leading-snug ${isMe ? "text-white" : "text-[#f5f5f5]"}`}>
+                {msg.fileName || "documento.pdf"}
+              </span>
+              <span className="text-[11px] text-[#708499] mt-0.5">Toca para descargar</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="shrink-0 text-[#708499]">
+              <path d="M12 15V3M12 15l-4-4M12 15l4-4M3 19h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        )}
+
+        {/* TEXT */}
         {msg.content && (
           <div
             className="text-[14px] leading-relaxed wrap-break-words pr-8"
             dangerouslySetInnerHTML={{ __html: msg.content }}
           />
-        )}
-
-        {/* MULTIMEDIA CONTENT: PDF / FILE */}
-        {msg.messageType === "FILE" && msg.fileUrl && (
-          <a
-            href={msg.fileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`flex items-center gap-2.5 my-1 p-2 rounded-lg transition-colors bg-[rgba(0,0,0,0.15)]
-              ${isMe ? "text-[#80b1ea] hover:text-[#a2c9f7]" : "text-[#5288c1] hover:text-[#73a3d4]"}`}
-          >
-            <span className="text-xl">📄</span>
-            <span className="text-[13px] font-medium underline truncate max-w-45">
-              {msg.fileName || "archivo"}
-            </span>
-          </a>
         )}
 
         <span className={`absolute bottom-1 right-2 text-[10px] select-none
@@ -115,6 +139,6 @@ function MessageBubble({ msg }) {
         </span>
 
       </div>
-    </div>
+    </div >
   );
 }
