@@ -32,6 +32,10 @@ public class ChatController {
     @MessageMapping("/chat.room.{roomId}")
     public void handleRoomMessage(@DestinationVariable Long roomId, SendMessageDTO messageRequest,
             Principal principal) {
+
+        System.out.println(">>> messageType recibido: " + messageRequest.messageType());
+        System.out.println(">>> fileUrl recibido: " + messageRequest.fileUrl());
+
         if (!roomService.hasAccessToRoom(roomId, principal.getName())) {
             throw new AccessDeniedExcpetion("Room not found or access denied for room ID: " + roomId);
         }

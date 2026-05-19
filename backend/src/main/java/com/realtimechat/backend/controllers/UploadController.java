@@ -26,24 +26,11 @@ public class UploadController {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-
-        // Limitar tamaño — 10MB
         if (file.getSize() > 10 * 1024 * 1024) {
             return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE).build();
         }
 
         UploadResultDTO result = uploadService.uploadFile(file);
-
-        String messageType = switch (result.messageType()) {
-            case "video" -> "VIDEO";
-            case "raw" -> "FILE";
-            default -> "IMAGE";
-        };
-
-        return ResponseEntity.ok(new UploadResultDTO(
-            result.url(),
-            result.publicId(),
-            messageType
-        ));
+        return ResponseEntity.ok(result);
     }
 }
