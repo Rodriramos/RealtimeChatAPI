@@ -9,13 +9,30 @@ export function useWebSocket() {
   const { token } = useAuth();
   const clientRef        = useRef(null);
   const subscriptionsRef = useRef({});
-  const pendingSubsRef   = useRef([]); // ← suscripciones pendientes antes de conectar
+  const pendingSubsRef   = useRef([]);
 
   const [connected, setConnected] = useState(false);
   const [error,     setError]     = useState(null);
 
+  // Guardamos el token en una referencia para que los métodos de suscripción
+  // siempre lean el token actual sin forzar la recreación de funciones.
+  const tokenRef = useRef(token);
   useEffect(() => {
-    if (!token) return;
+    tokenRef.current = token;
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) {
+      // Si no hay token (logout), forzamos desconexión limpia
+      if (clientRef.current?.active) {
+        clientRef.current.deactivate();
+      }
+      setConnected(false);
+      return;
+    }
+
+    // Si ya hay un cliente activo y conectado, NO lo destruyas por un cambio de perfil
+    if (clientRef.current?.active) return;
 
     const client = new Client({
       webSocketFactory: () => new SockJS(WS_URL),
@@ -25,7 +42,7 @@ export function useWebSocket() {
         setConnected(true);
         setError(null);
 
-        // Execute pending subscriptions
+        // Ejecutar suscripciones pendientes
         pendingSubsRef.current.forEach(({ topic, callback }) => {
           if (!subscriptionsRef.current[topic]) {
             const sub = client.subscribe(topic, (msg) => {
@@ -54,17 +71,18 @@ export function useWebSocket() {
     clientRef.current = client;
 
     return () => {
-      client.deactivate();
-      subscriptionsRef.current = {};
-      pendingSubsRef.current   = [];
+      // Solo desactivar si realmente el token desapareció o el componente se desmonta por completo
+      if (!tokenRef.current) {
+        client.deactivate();
+        subscriptionsRef.current = {};
+        pendingSubsRef.current   = [];
+      }
     };
-  }, [token]);
+  }, [token]); // El efecto vigila el token, pero la salvaguarda interna impide el reconect bugeado
 
   const subscribe = useCallback((topic, callback) => {
-    // If already subscribed, ignore
     if (subscriptionsRef.current[topic]) return;
 
-    // If connected, subscribe immediately
     if (clientRef.current?.connected) {
       const sub = clientRef.current.subscribe(topic, (msg) => {
         callback(JSON.parse(msg.body));
@@ -73,7 +91,6 @@ export function useWebSocket() {
       return sub;
     }
 
-    // If not connected, add to pending subscriptions
     pendingSubsRef.current.push({ topic, callback });
   }, []);
 
@@ -83,7 +100,6 @@ export function useWebSocket() {
       sub.unsubscribe();
       delete subscriptionsRef.current[topic];
     }
-    // Delete from pending if exists
     pendingSubsRef.current = pendingSubsRef.current.filter(s => s.topic !== topic);
   }, []);
 
