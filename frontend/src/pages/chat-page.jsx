@@ -13,6 +13,7 @@ import RoomList from "../components/chat/room-list.jsx";
 import InvitationPanel from "../components/chat/invitation-panel.jsx";
 import CreateRoomForm from "../components/chat/create-room-form.jsx";
 import Toast from "../components/chat/toast.jsx";
+import ProfilePage from "./profile-page.jsx";
 
 export default function ChatPage() {
   const { user, logout } = useAuth();
@@ -20,6 +21,8 @@ export default function ChatPage() {
 
   const [activeRoom, setActiveRoom] = useState({ id: 1, name: "Global Room", type: "GLOBAL" });
   const [activeTab, setActiveTab] = useState("chat");
+
+  const [showProfile, setShowProfile] = useState(false);
 
   const {
     thematicRooms,
@@ -47,11 +50,6 @@ export default function ChatPage() {
     if (connected) loadInvitations();
   }, [connected]);
 
-  const handleSwitchRoom = (room) => {
-    setActiveRoom(room);
-    setActiveTab("chat");
-  };
-
   const handleSend = (content) => {
     sendMessage(content, publish);
     clearTyping();
@@ -68,6 +66,12 @@ export default function ChatPage() {
     handleSwitchRoom(room);
   };
 
+  const handleSwitchRoom = (room) => {
+    setShowProfile(false);
+    setActiveRoom(room);
+    setActiveTab("chat");
+  };
+
   return (
     <div className="flex h-screen bg-[#080c0e] overflow-hidden">
 
@@ -80,54 +84,60 @@ export default function ChatPage() {
         invitationCount={invitations.length}
         onSwitchRoom={handleSwitchRoom}
         onLogout={logout}
+        onOpenProfile={() => setShowProfile(true)} // <- Pasamos la acción al footer
       />
 
-      <div className="flex flex-col flex-1 overflow-hidden">
+      {/* RENDERIZADO CONDICIONAL DE LA PÁGINA DERECHA */}
+      {showProfile ? (
+        <ProfilePage onClose={() => setShowProfile(false)} />
+      ) : (
+        <div className="flex flex-col flex-1 overflow-hidden">
 
-        <RoomTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          invitationCount={invitations.length}
-          activeRoomName={activeRoom.name}
-          connected={connected}
-        />
-
-        {activeTab === "chat" && (
-          <>
-            <MessageList messages={messages} loading={loadingHistory} />
-            {typingText && (
-              <div className="px-4 py-1 text-[11px] text-[#6a8a98] font-mono italic bg-[#080c0e]">
-                {typingText}
-              </div>
-            )}
-            <SendBar onSend={handleSend} disabled={!connected} onTyping={notifyTyping} />
-          </>
-        )}
-
-        {activeTab === "rooms" && (
-          <RoomList
-            thematicRooms={thematicRooms}
-            privateRooms={privateRooms}
-            onEnter={handleSwitchRoom}
+          <RoomTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            invitationCount={invitations.length}
+            activeRoomName={activeRoom.name}
+            connected={connected}
           />
-        )}
 
-        {activeTab === "invitations" && (
-          <InvitationPanel
-            invitations={invitations}
-            onAccept={handleAcceptInvitation}
-            onMarkSeen={markInvitationsSeen}
-          />
-        )}
+          {activeTab === "chat" && (
+            <>
+              <MessageList messages={messages} loading={loadingHistory} />
+              {typingText && (
+                <div className="px-4 py-1 text-[11px] text-[#6a8a98] font-mono italic bg-[#080c0e]">
+                  {typingText}
+                </div>
+              )}
+              <SendBar onSend={handleSend} disabled={!connected} onTyping={notifyTyping} />
+            </>
+          )}
 
-        {activeTab === "create" && (
-          <CreateRoomForm
-            onSubmit={handleCreateRoom}
-            loading={roomsLoading}
-          />
-        )}
+          {activeTab === "rooms" && (
+            <RoomList
+              thematicRooms={thematicRooms}
+              privateRooms={privateRooms}
+              onEnter={handleSwitchRoom}
+            />
+          )}
 
-      </div>
+          {activeTab === "invitations" && (
+            <InvitationPanel
+              invitations={invitations}
+              onAccept={handleAcceptInvitation}
+              onMarkSeen={markInvitationsSeen}
+            />
+          )}
+
+          {activeTab === "create" && (
+            <CreateRoomForm
+              onSubmit={handleCreateRoom}
+              loading={roomsLoading}
+            />
+          )}
+
+        </div>
+      )}
 
       <Toast
         connected={connected}

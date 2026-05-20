@@ -9,6 +9,7 @@ export default function Sidebar({
   invitationCount,
   onSwitchRoom,
   onLogout,
+  onOpenProfile
 }) {
   const navigate = useNavigate();
 
@@ -29,15 +30,14 @@ export default function Sidebar({
           <span className="text-[11px] text-[#7b92ab]">
             {connected ? "online" : "connecting..."}
           </span>
-          <div className={`w-2 h-2 rounded-full transition-all ${
-            connected ? "bg-[#2481cc]" : "bg-[#ef476f] animate-pulse"
-          }`} />
+          <div className={`w-2 h-2 rounded-full transition-all ${connected ? "bg-[#2481cc]" : "bg-[#ef476f] animate-pulse"
+            }`} />
         </div>
       </div>
 
       {/* ROOM SECTION */}
       <div className="flex-1 overflow-y-auto py-2 space-y-4">
-        
+
         {/* GLOBAL */}
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-wider text-[#7b92ab] px-4 pb-1">
@@ -101,19 +101,25 @@ export default function Sidebar({
 
       {/* FOOTER */}
       <div className="mt-auto p-3 bg-[#111923] border-t border-[#101921] flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="w-8 h-8 rounded-full bg-[#2481cc] flex items-center justify-center text-[13px] text-white font-semibold shrink-0 shadow-sm">
+
+        {/* BOTÓN DE PERFIL */}
+        <button
+          onClick={onOpenProfile} // <- Cambiado aquí
+          className="flex items-center gap-2.5 min-w-0 flex-1 text-left hover:bg-[#1c242c] p-1.5 rounded-xl transition-colors cursor-pointer group"
+          title="My Profile Settings"
+        >
+          <div className="w-8 h-8 rounded-full bg-[#2481cc] group-hover:bg-[#2893e6] flex items-center justify-center text-[13px] text-white font-semibold shrink-0 shadow-sm transition-colors">
             {user?.username?.[0]?.toUpperCase() ?? "?"}
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-[13px] font-medium text-[#f5f5f5] truncate">
+            <span className="text-[13px] font-medium text-[#f5f5f5] truncate group-hover:text-[#2481cc] transition-colors">
               {user?.username ?? "Anonymous"}
             </span>
             <span className="text-[11px] text-[#7b92ab] truncate">
-              {user?.email ?? "Session active"}
+              {user?.email ?? "View profile"}
             </span>
           </div>
-        </div>
+        </button>
 
         {/* LOGOUT BUTTON */}
         <button

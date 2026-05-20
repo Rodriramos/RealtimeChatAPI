@@ -40,7 +40,7 @@ export function useTyping(activeRoomId, { subscribe, unsubscribe, publish, conne
       typingTimers.current = {};
       setTypingUsers([]);
     };
-  }, [activeRoomId]);
+  }, [activeRoomId, user, subscribe, unsubscribe]);
 
   const notifyTyping = useCallback(() => {
     if (!connected) return;
