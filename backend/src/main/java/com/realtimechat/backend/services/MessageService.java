@@ -27,6 +27,12 @@ public class MessageService {
 
     @Transactional
     public Message saveMessage(String content, Long roomId, String username) {
+        return saveMessage(content, roomId, username, Message.MessageType.TEXT, null, null);
+    }
+
+    @Transactional
+    public Message saveMessage(String content, Long roomId, String username, Message.MessageType messageType,
+            String fileUrl, String fileName) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RoomNotFoundException("Room not found with id: " + roomId));
         User sender = userRepository.findByUsername(username)
@@ -36,6 +42,9 @@ public class MessageService {
         message.setContent(content);
         message.setRoom(room);
         message.setUser(sender);
+        message.setMessageType(messageType);
+        message.setFileUrl(fileUrl);
+        message.setFileName(fileName);
         return messageRepository.save(message);
     }
 

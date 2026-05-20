@@ -1,43 +1,59 @@
 export default function InvitationPanel({ invitations, onAccept, onMarkSeen }) {
   return (
-    <div className="flex-1 overflow-y-auto bg-[#080c0e]">
+    <div className="flex-1 overflow-y-auto bg-[#0e1621] font-sans">
 
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#1c2428]">
-        <span className="text-[11px] text-[#6a8a98] font-mono">
-          Invitaciones pendientes
+      {/* HEADER */}
+      <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#101921] bg-[#17212b]">
+        <span className="text-[13px] text-[#5288c1] font-medium tracking-wide">
+          Pending Invitations
         </span>
         {invitations.length > 0 && (
           <button
             onClick={onMarkSeen}
-            className="text-[10px] text-purple-400 border border-purple-900 bg-[#1a0e20] px-3 py-1 rounded-sm font-mono tracking-wide hover:border-purple-500 transition-colors cursor-pointer"
+            className="text-[12px] text-[#2481cc] hover:text-[#2893e6] font-medium transition-colors cursor-pointer bg-none border-0 px-1 py-0.5"
           >
-            ✓ Mark all as seen
+            Mark all as seen
           </button>
         )}
       </div>
 
-      <div className="p-4 flex flex-col gap-3">
+      {/* MAIN BODY */}
+      <div className="flex flex-col divide-y divide-[#101921]">
         {invitations.length === 0 ? (
-          <p className="text-[12px] text-[#334450] font-mono text-center py-8">
-            // without invitations, the world is a darker place... //
-          </p>
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+            <span className="text-4xl mb-3 opacity-40">📬</span>
+            <p className="text-[14px] text-[#708499] max-w-xs leading-relaxed">
+              No pending invitations at the moment. You're all caught up!
+            </p>
+          </div>
         ) : (
           invitations.map(r => (
             <div
               key={r.id}
-              className="flex items-center justify-between bg-[#0e0814] border border-[#2a1540] rounded px-4 py-3 animate-[fadeUp_0.2s_ease]"
+              className="flex items-center justify-between px-6 py-4 bg-transparent hover:bg-[#17212b] transition-colors group animate-[fadeUp_0.15s_ease]"
             >
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[13px] text-[#c8d8e0] font-sans font-light">
-                  🔒 {r.name}
-                </span>
-                <span className="text-[10px] text-[#334450] font-mono">id: {r.id}</span>
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-full bg-[#2f1f3a] text-purple-400 flex items-center justify-center shrink-0 text-lg font-medium shadow-sm">
+                  ✉️
+                </div>
+
+                {/* ROOM DETAILS */}
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="text-[14.5px] text-[#f5f5f5] font-medium group-hover:text-[#2481cc] transition-colors truncate">
+                    {r.name}
+                  </span>
+                  <span className="text-[12.5px] text-[#708499] font-normal">
+                    You have been invited to this private room
+                  </span>
+                </div>
               </div>
+
+              {/* ACCEPT BUTTON */}
               <button
                 onClick={() => onAccept(r)}
-                className="text-[10px] text-purple-400 border border-purple-900 bg-[#1a0e20] px-3 py-1.5 rounded-sm font-mono tracking-wide hover:border-purple-500 transition-colors cursor-pointer"
+                className="px-4 py-1.5 bg-[#2481cc] hover:bg-[#2893e6] text-white text-[13px] font-medium rounded-lg shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
               >
-                Join
+                Accept
               </button>
             </div>
           ))

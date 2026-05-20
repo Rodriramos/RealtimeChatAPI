@@ -32,14 +32,25 @@ public class ChatController {
     @MessageMapping("/chat.room.{roomId}")
     public void handleRoomMessage(@DestinationVariable Long roomId, SendMessageDTO messageRequest,
             Principal principal) {
+
+        System.out.println(">>> messageType recibido: " + messageRequest.messageType());
+        System.out.println(">>> fileUrl recibido: " + messageRequest.fileUrl());
+
         if (!roomService.hasAccessToRoom(roomId, principal.getName())) {
             throw new AccessDeniedExcpetion("Room not found or access denied for room ID: " + roomId);
         }
 
+        Message.MessageType type = messageRequest.messageType() != null
+                ? Message.MessageType.valueOf(messageRequest.messageType())
+                : Message.MessageType.TEXT;
+
         Message savedMessage = messageService.saveMessage(
                 messageRequest.content(),
                 roomId,
-                principal.getName());
+                principal.getName(),
+                type,
+                messageRequest.fileUrl(),
+                messageRequest.fileName());
 
         String destination = "/topic/chat.room." + roomId;
         messagingTemplate.convertAndSend(destination, toResponse(savedMessage));
@@ -65,9 +76,8 @@ public class ChatController {
         }
 
         messagingTemplate.convertAndSend(
-            "/topic/chat.room." + roomId + ".typing",
-            new TypingNotificationDTO(principal.getName())
-        );
+                "/topic/chat.room." + roomId + ".typing",
+                new TypingNotificationDTO(principal.getName()));
     }
 
     private MessageResponseDTO toResponse(Message message) {
@@ -75,6 +85,9 @@ public class ChatController {
                 message.getId(),
                 message.getContent(),
                 message.getCreatedAt(),
+                message.getMessageType().name(),
+                message.getFileUrl(),
+                message.getFileName(),
                 message.getUser().getUsername(),
                 message.getUser().getId());
     }

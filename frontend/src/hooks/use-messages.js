@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "./use-auth";
 
 const API_URL = "http://localhost:8080/api";
@@ -6,23 +6,28 @@ const API_URL = "http://localhost:8080/api";
 export function useMessages(activeRoomId, { subscribe, unsubscribe, connected }) {
   const { token } = useAuth();
 
-  const [messages,       setMessages]       = useState([]);
+  const [messages, setMessages] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [error,          setError]          = useState(null);
+  const [error, setError] = useState(null);
 
-  const headers = {
-    "Authorization": "Bearer " + token,
-    "Content-Type":  "application/json",
-  };
-
-  // History
+  // 🏛️ History
   const loadHistory = useCallback(async (roomId) => {
+    if (!token) return; 
+    
     setLoadingHistory(true);
     setError(null);
     setMessages([]);
     try {
-      const res = await fetch(`${API_URL}/chat/room/${roomId}/history`, { headers });
+      const res = await fetch(`${API_URL}/chat/room/${roomId}/history`, { 
+        headers: {
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/json",
+        } 
+      });
+      
+      if (res.status === 401) throw new Error("Session expired or unauthorized");
       if (res.status === 403) throw new Error("You are not a member of this room");
+      
       const data = await res.json();
       setMessages(data.reverse().map(m => ({ ...m, isHistory: true })));
     } catch (err) {
@@ -32,7 +37,7 @@ export function useMessages(activeRoomId, { subscribe, unsubscribe, connected })
     }
   }, [token]);
 
-  // Subscription
+  // 📡 Subscription
   useEffect(() => {
     if (!activeRoomId) return;
 
@@ -46,19 +51,35 @@ export function useMessages(activeRoomId, { subscribe, unsubscribe, connected })
     });
 
     return () => unsubscribe(topic);
-  }, [activeRoomId]);
+  }, [activeRoomId, subscribe, unsubscribe]);
 
-  // History when switch room o conect
+  // 🔄 Load History when switch room or connect
   useEffect(() => {
-    if (!connected || !activeRoomId) return;
-    loadHistory(activeRoomId);
-  }, [activeRoomId, connected]);
+    if (!connected || !activeRoomId || !token) return;
 
-  // Send
-  const sendMessage = useCallback((content, publish) => {
-    if (!content.trim() || !connected) return;
-    publish(`/app/chat.room.${activeRoomId}`, { content });
-  }, [activeRoomId, connected]);
+    let isMounted = true;
 
-  return { messages, loadingHistory, error, sendMessage, loadHistory };
+    const fetchHistory = async () => {
+      try {
+        if (isMounted) {
+          await loadHistory(activeRoomId);
+        }
+      } catch (err) {
+        console.error("Failed to fetch history safely", err);
+      }
+    };
+
+    fetchHistory();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeRoomId, connected, token, loadHistory]);
+
+  return {
+    messages,
+    loadingHistory,
+    error,
+    loadHistory
+  };
 }

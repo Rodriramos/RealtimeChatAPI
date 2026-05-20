@@ -5,7 +5,10 @@ import java.time.Instant;
 public record MessageResponseDTO(
     Long id, 
     String content, 
-    Instant sentAt, 
+    Instant sentAt,
+    String messageType,
+    String fileUrl,
+    String fileName,
     String senderUsername, 
-    Long senderId) 
-{}
+    Long senderId
+) {}
