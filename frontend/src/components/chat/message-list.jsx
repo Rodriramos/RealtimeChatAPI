@@ -36,7 +36,6 @@ export default function MessageList({ messages, loading }) {
 }
 
 function MessageBubble({ msg }) {
-  console.log("msg:", msg.messageType, msg.fileUrl, msg.fileName);
   const time = msg.sentAt || msg.createdAt
     ? new Date(msg.sentAt ?? msg.createdAt).toLocaleTimeString("es-ES", {
       hour: "2-digit",

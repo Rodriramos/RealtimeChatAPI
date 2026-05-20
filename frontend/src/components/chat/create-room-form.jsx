@@ -27,7 +27,6 @@ export default function CreateRoomForm({ onSubmit }) {
           headers: { Authorization: "Bearer " + token },
         });
         const data = await res.json();
-        // Filtrar los ya seleccionados
         setSearchResults(data.filter(u => !selectedUsers.some(s => s.id === u.id)));
       } catch {
         setSearchResults([]);

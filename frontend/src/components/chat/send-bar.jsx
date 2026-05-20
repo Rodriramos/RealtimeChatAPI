@@ -74,7 +74,6 @@ export default function SendBar({ onSend, disabled, onTyping }) {
 
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
-      console.log(">>> Upload response:", data);
 
       if (data.messageType === "AUDIO" || fileName.endsWith(".webm") || fileName.endsWith(".mp3")) {
         setAudioPreview({ url: data.url, name: fileName, resourceType: "AUDIO" });
