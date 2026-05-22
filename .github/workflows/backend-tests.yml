@@ -1,0 +1,42 @@
+name: Backend Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test:
+    name: Run Spring Boot Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven 
+
+      # ── Maven ──────────────────────────────────────────────────────────────
+      - name: Run tests (Maven)
+        working-directory: ./backend
+        run: mvn test --no-transfer-progress
+
+      # ── Gradle (descomenta si usas Gradle en lugar de Maven) ───────────────
+      # - name: Run tests (Gradle)
+      #   working-directory: ./backend
+      #   run: ./gradlew test
+
+      - name: Upload test report
+        if: always()  # publica el report aunque los tests fallen
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-report
+          # Ruta Maven. Para Gradle: build/reports/tests/test
+          path: backend/target/surefire-reports/
+          retention-days: 7
