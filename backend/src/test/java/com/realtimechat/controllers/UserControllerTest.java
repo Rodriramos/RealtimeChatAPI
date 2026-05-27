@@ -15,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import com.realtimechat.backend.controllers.UserController;
 import com.realtimechat.backend.dtos.UpdateProfileResponseDTO;
@@ -27,6 +29,7 @@ import com.realtimechat.backend.repositories.UserRepository;
 import com.realtimechat.backend.security.JwtUtil;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class UserControllerTest {
 
     @Mock

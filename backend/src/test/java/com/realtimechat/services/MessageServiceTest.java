@@ -83,6 +83,10 @@ class MessageServiceTest {
 
     @Test
     void testSaveMessageWithAllParameters_Success() {
+        testMessage.setMessageType(Message.MessageType.IMAGE);
+        testMessage.setFileUrl("http://example.com/image.jpg");
+        testMessage.setFileName("image.jpg");
+
         when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(messageRepository.save(any(Message.class))).thenReturn(testMessage);
@@ -107,9 +111,7 @@ class MessageServiceTest {
     void testSaveMessage_RoomNotFound() {
         when(roomRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(RoomNotFoundException.class, () ->
-            messageService.saveMessage("Test message", 999L, "testuser")
-        );
+        assertThrows(RoomNotFoundException.class, () -> messageService.saveMessage("Test message", 999L, "testuser"));
         verify(messageRepository, never()).save(any());
     }
 
@@ -118,9 +120,7 @@ class MessageServiceTest {
         when(roomRepository.findById(1L)).thenReturn(Optional.of(testRoom));
         when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
-        assertThrows(UserNotFoundException.class, () ->
-            messageService.saveMessage("Test message", 1L, "nonexistent")
-        );
+        assertThrows(UserNotFoundException.class, () -> messageService.saveMessage("Test message", 1L, "nonexistent"));
         verify(messageRepository, never()).save(any());
     }
 
@@ -226,4 +226,3 @@ class MessageServiceTest {
         verify(messageRepository, times(1)).save(any(Message.class));
     }
 }
-
