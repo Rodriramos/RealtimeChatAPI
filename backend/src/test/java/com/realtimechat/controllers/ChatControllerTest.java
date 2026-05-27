@@ -82,7 +82,7 @@ class ChatControllerTest {
         verify(messageService, times(1)).saveMessage(
                 "Test message", 1L, "testuser", Message.MessageType.TEXT, null, null);
         verify(messagingTemplate, times(1)).convertAndSend(
-                "/topic/chat.room.1", any(MessageResponseDTO.class));
+                eq("/topic/chat.room.1"), (Object) any(MessageResponseDTO.class));
     }
 
     @Test
@@ -93,16 +93,15 @@ class ChatControllerTest {
         testMessage.setFileUrl("http://example.com/image.jpg");
 
         when(roomService.hasAccessToRoom(1L, "testuser")).thenReturn(true);
-        when(messageService.saveMessage(anyString(), eq(1L), anyString(), any(), anyString(), anyString()))
+        when(messageService.saveMessage(anyString(), eq(1L), anyString(), any(), any(), any()))
                 .thenReturn(testMessage);
 
         chatController.handleRoomMessage(1L, messageRequest, principal);
 
         verify(messageService, times(1)).saveMessage(
-                "Image message", 1L, "testuser", Message.MessageType.IMAGE, 
+                "Image message", 1L, "testuser", Message.MessageType.IMAGE,
                 "http://example.com/image.jpg", null);
-        verify(messagingTemplate, times(1)).convertAndSend(
-                "/topic/chat.room.1", any(MessageResponseDTO.class));
+        verify(messagingTemplate).convertAndSend(eq("/topic/chat.room.1"), (Object) any(MessageResponseDTO.class));
     }
 
     @Test
@@ -111,13 +110,13 @@ class ChatControllerTest {
                 "Video message", "VIDEO", "http://example.com/video.mp4", null);
 
         when(roomService.hasAccessToRoom(1L, "testuser")).thenReturn(true);
-        when(messageService.saveMessage(anyString(), eq(1L), anyString(), any(), anyString(), anyString()))
+        when(messageService.saveMessage(anyString(), eq(1L), anyString(), any(), any(), any()))
                 .thenReturn(testMessage);
 
         chatController.handleRoomMessage(1L, messageRequest, principal);
 
         verify(messageService, times(1)).saveMessage(
-                anyString(), eq(1L), eq("testuser"), eq(Message.MessageType.VIDEO), 
+                anyString(), eq(1L), eq("testuser"), eq(Message.MessageType.VIDEO),
                 anyString(), isNull());
     }
 
@@ -127,10 +126,10 @@ class ChatControllerTest {
 
         when(roomService.hasAccessToRoom(1L, "testuser")).thenReturn(false);
 
-        assertThrows(AccessDeniedExcpetion.class, () ->
-            chatController.handleRoomMessage(1L, messageRequest, principal)
-        );
-        verify(messageService, never()).saveMessage(anyString(), anyLong(), anyString(), any(), anyString(), anyString());
+        assertThrows(AccessDeniedExcpetion.class,
+                () -> chatController.handleRoomMessage(1L, messageRequest, principal));
+        verify(messageService, never()).saveMessage(anyString(), anyLong(), anyString(), any(), anyString(),
+                anyString());
     }
 
     @Test
@@ -155,9 +154,7 @@ class ChatControllerTest {
     void testGetHistory_AccessDenied() {
         when(roomService.hasAccessToRoom(1L, "testuser")).thenReturn(false);
 
-        assertThrows(AccessDeniedExcpetion.class, () ->
-            chatController.getHistory(1L, principal)
-        );
+        assertThrows(AccessDeniedExcpetion.class, () -> chatController.getHistory(1L, principal));
         verify(messageService, never()).getLastMessages(anyLong(), anyInt());
     }
 
@@ -179,18 +176,18 @@ class ChatControllerTest {
         chatController.handleTyping(1L, principal);
 
         verify(messagingTemplate, times(1)).convertAndSend(
-        eq("/topic/chat.room.1.typing"), (Object) any());
+                eq("/topic/chat.room.1.typing"), (Object) any());
     }
 
     @Test
     void testHandleTyping_AccessDenied() {
         when(roomService.hasAccessToRoom(1L, "testuser")).thenReturn(false);
 
-        assertThrows(AccessDeniedExcpetion.class, () ->
-            chatController.handleTyping(1L, principal)
+        assertThrows(AccessDeniedExcpetion.class, () -> 
+        chatController.handleTyping(1L, principal)
         );
-        verify(messagingTemplate, times(1)).convertAndSend(
-        eq("/topic/chat.room.1"), (Object) any(MessageResponseDTO.class));
+
+        verifyNoInteractions(messagingTemplate);
     }
 
     @Test
@@ -199,13 +196,12 @@ class ChatControllerTest {
                 "File message", "FILE", "http://example.com/file.pdf", "file.pdf");
 
         when(roomService.hasAccessToRoom(1L, "testuser")).thenReturn(true);
-        when(messageService.saveMessage(anyString(), eq(1L), anyString(), any(), anyString(), anyString()))
+        when(messageService.saveMessage(anyString(), eq(1L), anyString(), any(), any(), any()))
                 .thenReturn(testMessage);
 
         chatController.handleRoomMessage(1L, messageRequest, principal);
 
-        verify(messagingTemplate, times(1)).convertAndSend(
-                "/topic/chat.room.1", any(MessageResponseDTO.class));
+        verify(messagingTemplate).convertAndSend(eq("/topic/chat.room.1"), (Object) any(MessageResponseDTO.class));
     }
 
     @Test
